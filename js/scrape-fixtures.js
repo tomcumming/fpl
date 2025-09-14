@@ -1,3 +1,5 @@
+// For parsing each game week from the premier league website
+
 function parseDate(str) {
   if(str == 'Yesterday')
     return new Date(new Date() - 24 * 60 * 60 * 1_000);
