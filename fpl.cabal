@@ -6,22 +6,24 @@ common shared
     ghc-options: -Wall
     default-language: GHC2021
     default-extensions:
-        OverloadedStrings
+        DerivingStrategies
         LambdaCase
         MultiWayIf
-        DerivingStrategies
+        OverloadedStrings
         RecordWildCards
     build-depends:
+        aeson,
         base ^>=4.21.0.0,
-        text,
         containers,
         mtl,
+        text,
         time
 
 library
     import:           shared
     exposed-modules:
         FPL.LoadData
+        FPL.LoadData.Historical
     hs-source-dirs:   src
 
 executable scratch
