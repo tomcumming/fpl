@@ -1,0 +1,31 @@
+cabal-version:      3.4
+name:               fpl
+version:            0.1.0.0
+
+common shared
+    ghc-options: -Wall
+    default-language: GHC2021
+    default-extensions:
+        OverloadedStrings
+        LambdaCase
+        MultiWayIf
+        DerivingStrategies
+        RecordWildCards
+    build-depends:
+        base ^>=4.21.0.0,
+        text,
+        containers,
+        mtl,
+        time
+
+library
+    import:           shared
+    exposed-modules:
+        FPL.LoadData
+    hs-source-dirs:   src
+
+executable scratch
+    import: shared
+    build-depends: fpl
+    main-is: Scratch.hs
+    hs-source-dirs: exe
