@@ -17,7 +17,7 @@ common shared
         containers,
         mtl,
         text,
-        time
+        time,
 
 library
     import:           shared
@@ -26,8 +26,10 @@ library
         FPL.LoadData.Historical
     hs-source-dirs:   src
 
-executable scratch
+executable reports
     import: shared
-    build-depends: fpl
-    main-is: Scratch.hs
+    build-depends:
+        filepath,
+        fpl,
+    main-is: Reports.hs
     hs-source-dirs: exe
