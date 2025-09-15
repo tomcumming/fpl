@@ -19,7 +19,7 @@ function parseDate(str) {
     'Sep': 9,
     'Oct': 10,
     'Nov': 11,
-    'Dec': 112,
+    'Dec': 12,
   }[monStr];
   if(day < 1 || day > 31) throw new Error(`Weird day: '${day}'`)
   if(mon < 1 || mon > 12) throw new Error(`Weird month: '${mon}'`)
