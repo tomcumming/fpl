@@ -154,3 +154,51 @@
 - Sunderland - Everton
 - Tottenham Hotspur - Chelsea
 - West Ham United - Newcastle United
+
+## 2025-11-08
+- Aston Villa - Bournemouth
+- Brentford - Newcastle United
+- Chelsea - Wolverhampton Wanderers
+- Crystal Palace - Brighton and Hove Albion
+- Everton - Fulham
+- Manchester City - Liverpool
+- Nottingham Forest - Leeds United
+- Sunderland - Arsenal
+- Tottenham Hotspur - Manchester United
+- West Ham United - Burnley
+
+## 2025-11-22
+- Arsenal - Tottenham Hotspur
+- Bournemouth - West Ham United
+- Brighton and Hove Albion - Brentford
+- Burnley - Chelsea
+- Fulham - Sunderland
+- Leeds United - Aston Villa
+- Liverpool - Nottingham Forest
+- Manchester United - Everton
+- Newcastle United - Manchester City
+- Wolverhampton Wanderers - Crystal Palace
+
+## 2025-11-29
+- Aston Villa - Wolverhampton Wanderers
+- Brentford - Burnley
+- Chelsea - Arsenal
+- Crystal Palace - Manchester United
+- Everton - Newcastle United
+- Manchester City - Leeds United
+- Nottingham Forest - Brighton and Hove Albion
+- Sunderland - Bournemouth
+- Tottenham Hotspur - Fulham
+- West Ham United - Liverpool
+
+## 2025-12-03
+- Arsenal - Brentford
+- Bournemouth - Everton
+- Brighton and Hove Albion - Aston Villa
+- Burnley - Crystal Palace
+- Fulham - Manchester City
+- Leeds United - Chelsea
+- Liverpool - Sunderland
+- Manchester United - West Ham United
+- Newcastle United - Tottenham Hotspur
+- Wolverhampton Wanderers - Nottingham Forest
