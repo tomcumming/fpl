@@ -1,13 +1,15 @@
 module FPL.LoadData
   ( Team (..),
     Result (..),
+    Fixture (..),
     Loaded (..),
     loadData,
   )
 where
 
 import Control.Category ((>>>))
-import Control.Monad.State (StateT, evalStateT, state)
+import Control.Monad.State (StateT, evalStateT, modify, state)
+import Control.Monad.Trans (lift)
 import Data.Char (isDigit)
 import Data.Map qualified as M
 import Data.Text qualified as T
@@ -27,9 +29,16 @@ data Result = Result
   }
   deriving (Show)
 
+data Fixture = Fixture
+  { fixHome :: Team,
+    fixAway :: Team
+  }
+  deriving (Show)
+
 data Loaded = Loaded
   { ldNames :: M.Map T.Text Team,
-    ldResults :: [(Day, Result)]
+    ldResults :: [(Day, Result)],
+    ldFixtures :: [(Day, Fixture)]
   }
   deriving (Show)
 
@@ -37,6 +46,7 @@ loadData :: IO Loaded
 loadData = do
   ldNames <- loadTeamNames
   ldResults <- loadResults ldNames
+  ldFixtures <- loadFixtures ldNames
   pure Loaded {..}
 
 loadTeamNames :: IO (M.Map T.Text Team)
@@ -54,6 +64,11 @@ loadResults teams =
   T.readFile "data/truth/results-and-fixtures.md"
     >>= (T.lines >>> parseResults teams)
 
+loadFixtures :: M.Map T.Text Team -> IO [(Day, Fixture)]
+loadFixtures teams =
+  T.readFile "data/truth/results-and-fixtures.md"
+    >>= (T.lines >>> parseFixtures teams)
+
 parseResults :: M.Map T.Text Team -> [T.Text] -> IO [(Day, Result)]
 parseResults teams = evalStateT $ do
   state (splitAt 1) >>= \case
@@ -69,12 +84,12 @@ parseResults teams = evalStateT $ do
         ["# Fixtures"] -> pure []
         [line] | Just dateStr <- T.stripPrefix "## " line -> do
           d :: Day <- iso8601ParseM $ T.unpack dateStr
-          fs <- parseFixtures
+          fs <- parseResultsGroup
           (((d,) <$> fs) <>) <$> go
         l -> fail $ "Failed parsing fixtures group: " <> show l
 
-    parseFixtures :: StateT [T.Text] IO [Result]
-    parseFixtures =
+    parseResultsGroup :: StateT [T.Text] IO [Result]
+    parseResultsGroup =
       state (splitAt 1) >>= \case
         [] -> pure []
         [""] -> pure []
@@ -88,5 +103,34 @@ parseResults teams = evalStateT $ do
             Just resHome <- teams M.!? T.strip homeName,
             Just resAway <- teams M.!? T.strip awayName,
             resScore <- (homeScore, awayScore) ->
-              (Result {..} :) <$> parseFixtures
+              (Result {..} :) <$> parseResultsGroup
         line -> fail $ "Failed parsing fixture line: " <> show line
+
+parseFixtures ::
+  M.Map T.Text Team ->
+  [T.Text] ->
+  IO [(Day, Fixture)]
+parseFixtures teams =
+  dropWhile (/= "# Fixtures")
+    >>> drop 1
+    >>> evalStateT go
+  where
+    go :: StateT [T.Text] IO [(Day, Fixture)]
+    go =
+      modify (dropWhile T.null) >> state (splitAt 1) >>= \case
+        [] -> pure []
+        [line] | Just dateStr <- T.stripPrefix "## " line -> do
+          d :: Day <- iso8601ParseM $ T.unpack dateStr
+          fs <- state (span (T.null >>> not)) >>= (traverse parseFixture >>> lift)
+          (((d,) <$> fs) <>) <$> go
+        line -> fail $ "Parsing fixture group: " <> show line
+
+    parseFixture :: T.Text -> IO Fixture
+    parseFixture inLine = maybe
+      (fail $ "Parsing fixture: " <> show inLine)
+      pure
+      $ do
+        [home, away] <- T.splitOn " - " <$> T.stripPrefix "- " inLine
+        fixHome <- teams M.!? home
+        fixAway <- teams M.!? away
+        Just Fixture {..}
