@@ -98,7 +98,7 @@ teamOpponents team = concatMap $ \case
 
 playersOverview :: PlayersData -> [[T.Text]]
 playersOverview = \PlayersData {..} ->
-  ["Name", "Team", "Pos", "Minutes", "Points", "Rate"]
+  ["Name", "Team", "Pos", "Minutes", "Points", "Rate", "DefCon", "Cost"]
     : ( M.elems pdPlayers
           & filter (psMinutes >>> (> 0))
           & List.sortOn psPoints
@@ -112,7 +112,9 @@ playersOverview = \PlayersData {..} ->
         tshow psPosition,
         tshow psMinutes,
         tshow psPoints,
-        tshow @Double (90 * realToFrac psPoints / realToFrac psMinutes)
+        tshow @Double (90 * realToFrac psPoints / realToFrac psMinutes),
+        tshow @Double (90 * realToFrac psDefCon / realToFrac psMinutes),
+        tshow @Double (realToFrac psCost / 10)
       ]
 
 -- | Chance that t1 will keep a clean sheet against t2
