@@ -22,8 +22,9 @@ common shared
 library
     import:           shared
     exposed-modules:
-        FPL.LoadData
+        FPL.LoadData.Fixtures
         FPL.LoadData.Historical
+        FPL.LoadData.Players
     hs-source-dirs:   src
 
 executable reports

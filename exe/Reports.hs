@@ -2,18 +2,21 @@ module Main (main) where
 
 import Control.Category ((>>>))
 import Data.Function ((&))
+import Data.List qualified as List
 import Data.Map qualified as M
+import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.Time (Day)
-import FPL.LoadData
+import FPL.LoadData.Fixtures
   ( Fixture (..),
     Loaded (..),
     Result (..),
     Team,
-    loadData,
+    loadFixturesData,
     unTeam,
   )
+import FPL.LoadData.Players (PlayerStats (..), PlayersData (..), loadPlayerData)
 import System.FilePath ((<.>), (</>))
 
 data TeamStats = TeamStats
@@ -45,8 +48,11 @@ makeTeamStats = fmap (snd >>> asTeamStats) >>> M.unionsWith (<>)
 
 main :: IO ()
 main = do
-  Loaded {..} <- loadData
+  Loaded {..} <- loadFixturesData
+  playersData <- loadPlayerData $ S.fromList $ M.elems ldNames
   let ts = makeTeamStats ldResults
+  writeReport "players-overview" $ playersOverview playersData
+  -- ---
   writeReport "abs-clean-sheets" $ absCleanSheets ts ldFixtures
   writeReport "sum-clean-sheets" $ sumCleanSheets ts ldFixtures
   writeReport "abs-conc-points" $ absPointsConc ts ldFixtures
@@ -89,6 +95,25 @@ teamOpponents team = concatMap $ \case
       | fixHome == team -> [fixAway]
       | fixAway == team -> [fixHome]
       | otherwise -> []
+
+playersOverview :: PlayersData -> [[T.Text]]
+playersOverview = \PlayersData {..} ->
+  ["Name", "Team", "Pos", "Minutes", "Points", "Rate"]
+    : ( M.elems pdPlayers
+          & filter (psMinutes >>> (> 0))
+          & List.sortOn psPoints
+          & fmap goRow
+      )
+  where
+    goRow :: PlayerStats -> [T.Text]
+    goRow PlayerStats {..} =
+      [ psName,
+        unTeam psTeam,
+        tshow psPosition,
+        tshow psMinutes,
+        tshow psPoints,
+        tshow @Double (90 * realToFrac psPoints / realToFrac psMinutes)
+      ]
 
 -- | Chance that t1 will keep a clean sheet against t2
 cleanSheetProb :: M.Map Team TeamStats -> Team -> Team -> Double

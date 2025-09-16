@@ -1,9 +1,9 @@
-module FPL.LoadData
+module FPL.LoadData.Fixtures
   ( Team (..),
     Result (..),
     Fixture (..),
     Loaded (..),
-    loadData,
+    loadFixturesData,
   )
 where
 
@@ -42,8 +42,8 @@ data Loaded = Loaded
   }
   deriving (Show)
 
-loadData :: IO Loaded
-loadData = do
+loadFixturesData :: IO Loaded
+loadFixturesData = do
   ldNames <- loadTeamNames
   ldResults <- loadResults ldNames
   ldFixtures <- loadFixtures ldNames
