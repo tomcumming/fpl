@@ -39,7 +39,10 @@ data PlayerStats = PlayerStats
     psPosition :: Position,
     psPoints :: Word,
     psCost :: Word,
-    psDefCon :: Word
+    psDefCon :: Word,
+    psGoals :: Word,
+    psAssists :: Word,
+    psCleanSheets :: Word
   }
   deriving (Show)
 
@@ -97,6 +100,9 @@ parsePlayerStats teamIds posIds obj = do
   psCost <- obj Aeson..: "now_cost"
   psPoints <- obj Aeson..: "total_points"
   psDefCon <- obj Aeson..: "defensive_contribution"
+  psGoals <- obj Aeson..: "goals_scored"
+  psAssists <- obj Aeson..: "assists"
+  psCleanSheets <- obj Aeson..: "clean_sheets"
   pure $
     if canSelect
       then Just (playerId, PlayerStats {..})
