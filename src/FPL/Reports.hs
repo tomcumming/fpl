@@ -1,9 +1,13 @@
 module FPL.Reports
   ( tshow,
+    pointsForAssist,
+    pointsForGoal,
+    pointsForCS,
     TeamStats (..),
     makeTeamStats,
     showPercentage,
     poissonPdf,
+    chanceOfCleanSheet,
     runningSum,
     teamOpponents,
   )
@@ -15,9 +19,27 @@ import Data.Map qualified as M
 import Data.Text qualified as T
 import Data.Time (Day)
 import FPL.LoadData.Fixtures (Fixture (..), Result (..), Team)
+import FPL.LoadData.Players (Position (..))
 
 tshow :: (Show a) => a -> T.Text
 tshow = show >>> T.pack
+
+pointsForAssist :: Word
+pointsForAssist = 3
+
+pointsForGoal :: Position -> Word
+pointsForGoal = \case
+  GK -> 10
+  Def -> 6
+  Mid -> 5
+  Att -> 4
+
+pointsForCS :: Position -> Word
+pointsForCS = \case
+  GK -> 4
+  Def -> 4
+  Mid -> 1
+  Att -> 0
 
 data TeamStats = TeamStats
   { tsPlayed :: Word,
@@ -58,6 +80,10 @@ poissonPdf :: (Floating a, Ord a) => a -> Word -> a
 poissonPdf lambda k = lambda ** k' * exp (negate lambda) / factorial k'
   where
     k' = realToFrac k
+
+-- | Chance of clean sheet given the usual goals/game
+chanceOfCleanSheet :: Double -> Double
+chanceOfCleanSheet xg = poissonPdf xg 0
 
 runningSum :: [Double] -> [Double]
 runningSum = scanl (+) 0 >>> drop 1
