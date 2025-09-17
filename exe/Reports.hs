@@ -1,50 +1,16 @@
 module Main (main) where
 
 import Control.Category ((>>>))
-import Data.Function ((&))
-import Data.List qualified as List
 import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
-import Data.Time (Day)
-import FPL.LoadData.Fixtures
-  ( Fixture (..),
-    Loaded (..),
-    Result (..),
-    Team,
-    loadFixturesData,
-    unTeam,
-  )
-import FPL.LoadData.Players (PlayerStats (..), PlayersData (..), loadPlayerData)
+import FPL.LoadData.Fixtures (Loaded (..), loadFixturesData)
+import FPL.LoadData.Players (loadPlayerData)
+import FPL.Reports (makeTeamStats)
+import FPL.Reports.Player (playersOverview)
+import FPL.Reports.Team qualified as Team
 import System.FilePath ((<.>), (</>))
-
-data TeamStats = TeamStats
-  { tsPlayed :: Word,
-    tsScored :: Word,
-    tsConc :: Word
-  }
-  deriving (Show)
-
-instance Semigroup TeamStats where
-  ts1 <> ts2 =
-    TeamStats
-      { tsPlayed = tsPlayed ts1 + tsPlayed ts2,
-        tsScored = tsScored ts1 + tsScored ts2,
-        tsConc = tsConc ts1 + tsConc ts2
-      }
-
-makeTeamStats :: [(Day, Result)] -> M.Map Team TeamStats
-makeTeamStats = fmap (snd >>> asTeamStats) >>> M.unionsWith (<>)
-  where
-    asTeamStats :: Result -> M.Map Team TeamStats
-    asTeamStats Result {..} =
-      M.fromList
-        [ (resHome, TeamStats {tsPlayed = 1, tsScored = hs, tsConc = as}),
-          (resAway, TeamStats {tsPlayed = 1, tsScored = as, tsConc = hs})
-        ]
-      where
-        (hs, as) = resScore
 
 main :: IO ()
 main = do
@@ -53,13 +19,13 @@ main = do
   let ts = makeTeamStats ldResults
   writeReport "players-overview" $ playersOverview playersData
   -- When picking defenders...
-  writeReport "abs-clean-sheets" $ absCleanSheets ts ldFixtures
-  writeReport "sum-clean-sheets" $ sumCleanSheets ts ldFixtures
-  writeReport "abs-conc-points" $ absPointsConc ts ldFixtures
-  writeReport "sum-conc-points" $ sumPointsConc ts ldFixtures
+  writeReport "abs-clean-sheets" $ Team.absCleanSheets ts ldFixtures
+  writeReport "sum-clean-sheets" $ Team.sumCleanSheets ts ldFixtures
+  writeReport "abs-conc-points" $ Team.absPointsConc ts ldFixtures
+  writeReport "sum-conc-points" $ Team.sumPointsConc ts ldFixtures
   -- When picking attacking players...
-  writeReport "abs-def-weakness" $ absDefWeakness ts ldFixtures
-  writeReport "sum-def-weakness" $ sumDefWeakness ts ldFixtures
+  writeReport "abs-def-weakness" $ Team.absDefWeakness ts ldFixtures
+  writeReport "sum-def-weakness" $ Team.sumDefWeakness ts ldFixtures
 
 reportsDir :: FilePath
 reportsDir = "reports"
@@ -69,140 +35,3 @@ writeReport name =
   fmap (T.intercalate "\t")
     >>> T.unlines
     >>> T.writeFile (reportsDir </> name <.> "tsv")
-
-tshow :: (Show a) => a -> T.Text
-tshow = show >>> T.pack
-
-showPercentage :: Double -> T.Text
-showPercentage p = p * 100 & round & tshow @Int & (<> "%")
-
-factorial :: (Ord t, Num t) => t -> t
-factorial n
-  | n <= 1 = 1
-  | otherwise = n * factorial (n - 1)
-
-poissonPdf :: (Floating a, Ord a) => a -> Word -> a
-poissonPdf lambda k = lambda ** k' * exp (negate lambda) / factorial k'
-  where
-    k' = realToFrac k
-
-runningSum :: [Double] -> [Double]
-runningSum = scanl (+) 0 >>> drop 1
-
-teamOpponents :: Team -> [(Day, Fixture)] -> [Team]
-teamOpponents team = concatMap $ \case
-  (_, Fixture {..}) ->
-    if
-      | fixHome == team -> [fixAway]
-      | fixAway == team -> [fixHome]
-      | otherwise -> []
-
-playersOverview :: PlayersData -> [[T.Text]]
-playersOverview = \PlayersData {..} ->
-  ["Name", "Team", "Pos", "Minutes", "Pts", "Pts/g", "DefCon/g", "GI", "GI/g", "Cost"]
-    : ( M.elems pdPlayers
-          & filter (psMinutes >>> (> 0))
-          & List.sortOn psPoints
-          & fmap goRow
-      )
-  where
-    goRow :: PlayerStats -> [T.Text]
-    goRow PlayerStats {..} =
-      [ psName,
-        unTeam psTeam,
-        tshow psPosition,
-        tshow psMinutes,
-        tshow psPoints,
-        tshow @Double $ 90 * realToFrac psPoints / realToFrac psMinutes,
-        tshow @Double $ 90 * realToFrac psDefCon / realToFrac psMinutes,
-        tshow @Double goalInv,
-        tshow @Double $ 90 * goalInv / realToFrac psMinutes,
-        tshow @Double $ realToFrac psCost / 10
-      ]
-      where
-        goalInv = realToFrac $ psGoals + psAssists
-
--- | Chance that t1 will keep a clean sheet against t2
-cleanSheetProbs ::
-  M.Map Team TeamStats ->
-  [(Day, Fixture)] ->
-  [(Team, [Double])]
-cleanSheetProbs teamStats fixtures =
-  flip fmap (M.keys teamStats) $ \team -> (team, row team)
-  where
-    row team = teamOpponents team fixtures & fmap (cleanSheetProb team)
-    cleanSheetProb :: Team -> Team -> Double
-    cleanSheetProb t1 t2 = poissonPdf avg 0
-      where
-        t1Conc :: Double =
-          let TeamStats {..} = teamStats M.! t1
-           in realToFrac tsConc / realToFrac tsPlayed
-        t2Score :: Double =
-          let TeamStats {..} = teamStats M.! t2
-           in realToFrac tsScored / realToFrac tsPlayed
-        avg = (t1Conc + t2Score) / 2
-
-absCleanSheets :: M.Map Team TeamStats -> [(Day, Fixture)] -> [[T.Text]]
-absCleanSheets teamStats =
-  cleanSheetProbs teamStats
-    >>> fmap (\(team, ps) -> unTeam team : fmap showPercentage ps)
-
-sumCleanSheets :: M.Map Team TeamStats -> [(Day, Fixture)] -> [[T.Text]]
-sumCleanSheets teamStats =
-  cleanSheetProbs teamStats
-    >>> fmap (\(team, ps) -> unTeam team : fmap tshow (runningSum ps))
-
--- | You lose 1 point for each 2 goals conceeded
-concPoints ::
-  M.Map Team TeamStats ->
-  [(Day, Fixture)] ->
-  [(Team, [Double])]
-concPoints teamStats fixtures =
-  flip fmap (M.keys teamStats) $ \team -> (team, row team)
-  where
-    row team = teamOpponents team fixtures & fmap (concPointSum team)
-    concPointSum :: Team -> Team -> Double
-    concPointSum t1 t2 = sum $ do
-      k <- [2 .. 8]
-      let pts = k `div` 2
-      [poissonPdf avg k * realToFrac pts]
-      where
-        t1Conc :: Double =
-          let TeamStats {..} = teamStats M.! t1
-           in realToFrac tsConc / realToFrac tsPlayed
-        t2Score :: Double =
-          let TeamStats {..} = teamStats M.! t2
-           in realToFrac tsScored / realToFrac tsPlayed
-        avg = (t1Conc + t2Score) / 2
-
-absPointsConc :: M.Map Team TeamStats -> [(Day, Fixture)] -> [[T.Text]]
-absPointsConc teamStats =
-  concPoints teamStats
-    >>> fmap (\(team, ps) -> unTeam team : fmap tshow ps)
-
-sumPointsConc :: M.Map Team TeamStats -> [(Day, Fixture)] -> [[T.Text]]
-sumPointsConc teamStats =
-  concPoints teamStats
-    >>> fmap (\(team, ps) -> unTeam team : fmap tshow (runningSum ps))
-
-defWeekness :: M.Map Team TeamStats -> [(Day, Fixture)] -> [(Team, [Double])]
-defWeekness teamStats fixtures =
-  flip fmap (M.keys teamStats) $ \team -> (team, row team)
-  where
-    row team =
-      teamOpponents team fixtures & fmap teamDefWeakness
-
-    teamDefWeakness :: Team -> Double
-    teamDefWeakness =
-      (teamStats M.!) >>> \TeamStats {..} ->
-        realToFrac tsConc / realToFrac tsPlayed
-
-absDefWeakness :: M.Map Team TeamStats -> [(Day, Fixture)] -> [[T.Text]]
-absDefWeakness teamStats =
-  defWeekness teamStats
-    >>> fmap (\(team, ps) -> unTeam team : fmap tshow ps)
-
-sumDefWeakness :: M.Map Team TeamStats -> [(Day, Fixture)] -> [[T.Text]]
-sumDefWeakness teamStats =
-  defWeekness teamStats
-    >>> fmap (\(team, ps) -> unTeam team : fmap tshow (runningSum ps))

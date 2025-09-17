@@ -25,6 +25,9 @@ library
         FPL.LoadData.Fixtures
         FPL.LoadData.Historical
         FPL.LoadData.Players
+        FPL.Reports
+        FPL.Reports.Team
+        FPL.Reports.Player
     hs-source-dirs:   src
 
 executable reports
