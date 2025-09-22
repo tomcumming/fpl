@@ -64,21 +64,21 @@
 - Burnley 0 - 1 Liverpool
 - Manchester City 3 - 0 Manchester United
 
-# Fixtures
 ## 2025-09-19
-- Liverpool - Everton
-- Brighton and Hove Albion - Tottenham Hotspur
-- Burnley - Nottingham Forest
-- West Ham United - Crystal Palace
-- Wolverhampton Wanderers - Leeds United
-- Manchester United - Chelsea
-- Fulham - Brentford
+- Liverpool 2 - 1 Everton
+- Brighton and Hove Albion 2 - 2 Tottenham Hotspur
+- Burnley 1 - 1 Nottingham Forest
+- West Ham United 1 - 2 Crystal Palace
+- Wolverhampton Wanderers 1 - 3 Leeds United
+- Manchester United 2 - 1 Chelsea
+- Fulham 3 - 1 Brentford
 
-## 2025-09-20
-- Bournemouth - Newcastle United
-- Sunderland - Aston Villa
-- Arsenal - Manchester City
+## 2025-09-21
+- Bournemouth 0 - 0 Newcastle United
+- Sunderland 1 - 1 Aston Villa
+- Arsenal 1 - 1 Manchester City
 
+# Fixtures
 ## 2025-09-26
 - Brentford - Manchester United
 - Chelsea - Brighton and Hove Albion
@@ -202,3 +202,15 @@
 - Manchester United - West Ham United
 - Newcastle United - Tottenham Hotspur
 - Wolverhampton Wanderers - Nottingham Forest
+
+## 2025-12-06
+- Aston Villa - Arsenal
+- Bournemouth - Chelsea
+- Brighton and Hove Albion - West Ham United
+- Everton - Nottingham Forest
+- Fulham - Crystal Palace
+- Leeds United - Liverpool
+- Manchester City - Sunderland
+- Newcastle United - Burnley
+- Tottenham Hotspur - Brentford
+- Wolverhampton Wanderers - Manchester United
