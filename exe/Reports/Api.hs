@@ -8,6 +8,11 @@ import Servant.HTML.Lucid (HTML)
 data Api mode = Api
   { apiRoot :: mode :- Get '[HTML] (L.Html ()),
     apiStatic :: mode :- "static" :> Raw,
-    apiDefence :: mode :- "defence" :> Get '[HTML] (L.Html ())
+    apiDefence :: mode :- "defence" :> Get '[HTML] (L.Html ()),
+    apiPlayersTotals ::
+      mode
+        :- "players"
+          :> "totals"
+          :> Get '[HTML] (L.Html ())
   }
   deriving stock (Generic)
