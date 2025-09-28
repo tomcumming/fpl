@@ -61,7 +61,7 @@ playerExpectedPoints TeamStats {..} FixtureExpected {..} PlayerStats {..} =
       psGoals * pointsForGoal psPosition
         + psAssists * pointsForAssist
     totalPtsFromCS = psCleanSheets * pointsForCS psPosition
-    totalOtherPts = psPoints - (totalPtsFromGoals + totalPtsFromCS)
+    totalOtherPts = psPoints - fromIntegral (totalPtsFromGoals + totalPtsFromCS)
 
 playersOverview :: PlayersData -> [[T.Text]]
 playersOverview = \PlayersData {..} ->

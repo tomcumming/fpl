@@ -14,6 +14,7 @@ import Data.Aeson.Types qualified as Aeson
 import Data.Map qualified as M
 import Data.Maybe (catMaybes)
 import Data.Set qualified as S
+import Data.String (fromString)
 import Data.Text qualified as T
 import FPL.LoadData.Fixtures (Team (Team))
 
@@ -37,7 +38,7 @@ data PlayerStats = PlayerStats
     psTeam :: Team,
     psMinutes :: Word,
     psPosition :: Position,
-    psPoints :: Word,
+    psPoints :: Int,
     psCost :: Word,
     psDefCon :: Word,
     psGoals :: Word,
@@ -87,26 +88,27 @@ parsePlayerStats ::
   Aeson.Object ->
   Aeson.Parser (Maybe (PlayerId, PlayerStats))
 parsePlayerStats teamIds posIds obj = do
-  canSelect <- obj Aeson..: "can_select"
   playerId <- PlayerId <$> obj Aeson..: "id"
-  psName <- obj Aeson..: "web_name"
-  psMinutes <- obj Aeson..: "minutes"
-  psPosition <-
-    obj Aeson..: "element_type"
-      >>= ((posIds M.!?) >>> maybe (fail "Invalid position ID") pure)
-  psTeam <-
-    obj Aeson..: "team"
-      >>= ((teamIds M.!?) >>> maybe (fail "Invalid team ID") pure)
-  psCost <- obj Aeson..: "now_cost"
-  psPoints <- obj Aeson..: "total_points"
-  psDefCon <- obj Aeson..: "defensive_contribution"
-  psGoals <- obj Aeson..: "goals_scored"
-  psAssists <- obj Aeson..: "assists"
-  psCleanSheets <- obj Aeson..: "clean_sheets"
-  pure $
-    if canSelect
-      then Just (playerId, PlayerStats {..})
-      else Nothing
+  (Aeson.<?> Aeson.Key ("playerId=" <> fromString (show playerId))) $ do
+    canSelect <- obj Aeson..: "can_select"
+    psName <- obj Aeson..: "web_name"
+    psMinutes <- obj Aeson..: "minutes"
+    psPosition <-
+      obj Aeson..: "element_type"
+        >>= ((posIds M.!?) >>> maybe (fail "Invalid position ID") pure)
+    psTeam <-
+      obj Aeson..: "team"
+        >>= ((teamIds M.!?) >>> maybe (fail "Invalid team ID") pure)
+    psCost <- obj Aeson..: "now_cost"
+    psPoints <- obj Aeson..: "total_points"
+    psDefCon <- obj Aeson..: "defensive_contribution"
+    psGoals <- obj Aeson..: "goals_scored"
+    psAssists <- obj Aeson..: "assists"
+    psCleanSheets <- obj Aeson..: "clean_sheets"
+    pure $
+      if canSelect
+        then Just (playerId, PlayerStats {..})
+        else Nothing
 
 parseTeamIds :: S.Set Team -> [Aeson.Object] -> Aeson.Parser (M.Map Int Team)
 parseTeamIds teams = traverse go >=> (M.fromList >>> pure)

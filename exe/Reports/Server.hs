@@ -105,17 +105,17 @@ data PlayerTotals = PlayerTotals
     ptsPos :: LD.Position,
     ptsCost :: Double,
     ptsMinutes :: Word,
-    ptsTotal :: Word,
-    ptsGoals :: Word,
-    ptsDef :: Word,
-    ptsOther :: Word
+    ptsTotal :: Int,
+    ptsGoals :: Int,
+    ptsCs :: Int,
+    ptsOther :: Int
   }
 
 data ScoreMaxes = ScoreMaxes
-  { smTotal :: Word,
-    smGoals :: Word,
-    smDef :: Word,
-    smOther :: Word
+  { smTotal :: Int,
+    smGoals :: Int,
+    smCs :: Int,
+    smOther :: Int
   }
 
 calcMaxes :: [PlayerTotals] -> ScoreMaxes
@@ -123,7 +123,7 @@ calcMaxes pts =
   ScoreMaxes
     { smTotal = pts & fmap ptsTotal & maximum,
       smGoals = pts & fmap ptsGoals & maximum,
-      smDef = pts & fmap ptsDef & maximum,
+      smCs = pts & fmap ptsCs & maximum,
       smOther = pts & fmap ptsOther & maximum
     }
 
@@ -140,10 +140,11 @@ calcPlayerTotal LD.PlayerStats {..} =
     }
   where
     ptsGoals =
-      psGoals * pointsForGoal psPosition
-        + psAssists * pointsForAssist
-    ptsDef = psCleanSheets * pointsForCS psPosition
-    ptsOther = psPoints - (ptsGoals + ptsDef)
+      fromIntegral $
+        psGoals * pointsForGoal psPosition
+          + psAssists * pointsForAssist
+    ptsCs = fromIntegral $ psCleanSheets * pointsForCS psPosition
+    ptsOther = psPoints - (ptsGoals + ptsCs)
 
 playerTotals :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
 playerTotals = do
@@ -169,7 +170,7 @@ playerTotals = do
       L.th_ "Pos"
       L.th_ "Cost"
       L.th_ "" -- spacer
-      L.th_ "Def"
+      L.th_ "CS"
       L.th_ "Other"
       L.th_ "Goals"
       L.th_ ""
@@ -183,13 +184,13 @@ playerTotals = do
       L.td_ $ L.toHtml $ T.show ptsPos
       L.td_ $ L.toHtml $ T.show ptsCost
       L.td_ "" -- spacer
-      renderScore smDef ptsDef
+      renderScore smCs ptsCs
       renderScore smOther ptsOther
       renderScore smGoals ptsGoals
       L.td_ "" -- spacer
       renderScore smTotal ptsTotal
 
-    renderScore :: Word -> Word -> L.Html ()
+    renderScore :: Int -> Int -> L.Html ()
     renderScore sm s =
       L.td_
         [L.style_ style]
