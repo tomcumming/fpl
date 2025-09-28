@@ -6,6 +6,7 @@ common shared
     ghc-options: -Wall
     default-language: GHC2021
     default-extensions:
+        DataKinds
         DerivingStrategies
         LambdaCase
         MultiWayIf
@@ -34,6 +35,14 @@ executable reports
     import: shared
     build-depends:
         filepath,
+        lucid,
+        servant,
+        servant-lucid,
+        servant-server,
+        warp,
         fpl,
     main-is: Reports.hs
     hs-source-dirs: exe
+    other-modules:
+        Reports.Api
+        Reports.Server

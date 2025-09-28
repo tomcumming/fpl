@@ -16,6 +16,9 @@
           upkgs.haskell.compiler.ghc9122
           upkgs.cabal-install
           pkgs.ormolu
+
+          pkgs.watchexec
+          pkgs.libzip
         ];
       };
       formatter."${system}" = pkgs.nixpkgs-fmt;
