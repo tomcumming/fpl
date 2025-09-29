@@ -78,23 +78,23 @@
 - Sunderland 1 - 1 Aston Villa
 - Arsenal 1 - 1 Manchester City
 
-# Fixtures
 ## 2025-09-26
-- Brentford - Manchester United
-- Chelsea - Brighton and Hove Albion
-- Crystal Palace - Liverpool
-- Leeds United - Bournemouth
-- Manchester City - Burnley
-- Nottingham Forest - Sunderland
-- Tottenham Hotspur - Wolverhampton Wanderers
-
-## 2025-09-27
-- Aston Villa - Fulham
-- Newcastle United - Arsenal
+- Brentford 3 - 1 Manchester United
+- Chelsea 1 - 3 Brighton and Hove Albion
+- Crystal Palace 2 - 1 Liverpool
+- Leeds United 2 - 2 Bournemouth
+- Manchester City 5 - 1 Burnley
+- Nottingham Forest 0 - 1 Sunderland
+- Tottenham Hotspur 1 - 1 Wolverhampton Wanderers
 
 ## 2025-09-28
-- Everton - West Ham United
+- Aston Villa 3 - 1 Fulham
+- Newcastle United 1 - 2 Arsenal
 
+## 2025-09-29
+- Everton 1 - 1 West Ham United
+
+# Fixtures
 ## 2025-10-02
 - Bournemouth - Fulham
 
@@ -214,3 +214,15 @@
 - Newcastle United - Burnley
 - Tottenham Hotspur - Brentford
 - Wolverhampton Wanderers - Manchester United
+
+## 2025-12-13
+- Arsenal - Wolverhampton Wanderers
+- Brentford - Leeds United
+- Burnley - Fulham
+- Chelsea - Everton
+- Crystal Palace - Manchester City
+- Liverpool - Brighton and Hove Albion
+- Manchester United - Bournemouth
+- Nottingham Forest - Tottenham Hotspur
+- Sunderland - Newcastle United
+- West Ham United - Aston Villa
