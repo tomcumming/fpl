@@ -11,7 +11,7 @@ import Data.Time (Day)
 import FPL.LoadData.Fixtures qualified as LD
 import Lucid qualified as L
 import Reports.Api qualified as Api
-import Reports.Markup (baseTemplate)
+import Reports.Markup (baseTemplate, showFloatPlaces)
 import Servant qualified as Sv
 
 fixtures :: Sv.Server Api.FixturesApi
@@ -83,7 +83,7 @@ fixtures = do
         let style = "background-color: " <> bgCol
         L.td_ [L.class_ "fixture-score", L.style_ style] $ do
           L.div_ $ L.toHtml $ LD.unTeam team
-          L.div_ $ L.toHtml $ T.show score
+          L.div_ $ L.toHtml $ showFloatPlaces 1 score
 
     scoreRow :: M.Map LD.Team Double -> [LD.Team] -> [(LD.Team, Double)]
     scoreRow teamScores = fmap (\t -> (t, teamScores M.! t))

@@ -10,7 +10,7 @@ import Data.Text qualified as T
 import Data.Tuple qualified as Tuple
 import FPL.LoadData.Fixtures qualified as LD
 import Lucid qualified as L
-import Reports.Markup (baseTemplate)
+import Reports.Markup (baseTemplate, showFloatPlaces)
 import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 
@@ -41,21 +41,22 @@ defence = do
     padResults :: Int -> [Word] -> [Maybe Word]
     padResults l = fmap Just >>> (<> repeat Nothing) >>> take l
 
-    renderResult :: (Real a, Show a) => Maybe a -> L.Html ()
-    renderResult = \case
+    renderResult :: Int -> Maybe Double -> L.Html ()
+    renderResult places = \case
       Nothing -> L.td_ "-"
       Just n -> do
         let hsl = "hsl(" <> goalsHue (realToFrac n) <> " 100% 50% / 0.25)"
         let style = "background-color: " <> hsl
-        L.td_ [L.style_ style] $ L.toHtml $ T.show n
+        L.td_ [L.style_ style] $ L.toHtml $ showFloatPlaces places n
 
     renderRow :: Int -> T.Text -> [Word] -> L.Html ()
     renderRow maxResults teamName gs = L.tr_ $ do
       L.th_ $ L.toHtml teamName
-      padResults maxResults gs & traverse_ renderResult
+      padResults maxResults gs
+        & traverse_ (fmap realToFrac >>> renderResult 0)
       L.td_ "" -- spacer
       let avg :: Double = fromIntegral (sum gs) / fromIntegral (length gs)
-      renderResult $ Just avg
+      renderResult 2 $ Just avg
 
     goalsHue :: Double -> T.Text
     goalsHue =
