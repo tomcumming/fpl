@@ -78,9 +78,11 @@ playerTotals = do
   let rows =
         List.sortOn ptsTotal dataRows
           & reverse
-          & fmap (renderRow maxes)
+          & zip [1 ..]
+          & fmap (uncurry (renderRow maxes))
   pure $ baseTemplate $ L.table_ $ do
     L.thead_ $ L.tr_ $ do
+      L.th_ "Rank"
       L.th_ "Name"
       L.th_ "Team"
       L.th_ "Pos"
@@ -93,8 +95,9 @@ playerTotals = do
       L.th_ "Total"
     L.tbody_ $ sequence_ rows
   where
-    renderRow :: ScoreMaxes -> PlayerTotals -> L.Html ()
-    renderRow ScoreMaxes {..} PlayerTotals {..} = L.tr_ $ do
+    renderRow :: ScoreMaxes -> Int -> PlayerTotals -> L.Html ()
+    renderRow ScoreMaxes {..} rank PlayerTotals {..} = L.tr_ $ do
+      L.td_ $ L.toHtml $ T.show rank
       L.th_ $ L.toHtml ptsName
       L.td_ $ L.toHtml $ LD.unTeam ptsTeam
       L.td_ $ L.toHtml $ T.show ptsPos
