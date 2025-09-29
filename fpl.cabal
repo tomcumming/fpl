@@ -45,4 +45,8 @@ executable reports
     hs-source-dirs: exe
     other-modules:
         Reports.Api
+        Reports.Markup
         Reports.Server
+        Reports.Report.Defence
+        Reports.Report.Fixtures
+        Reports.Report.PlayerTotals
