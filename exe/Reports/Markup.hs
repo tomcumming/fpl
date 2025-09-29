@@ -14,7 +14,9 @@ baseTemplate body = L.doctypehtml_ $ L.html_ $ do
   L.body_ $ do
     L.header_ $ L.nav_ $ do
       L.a_ [L.href_ "/"] "Home"
-      L.a_ [L.href_ "/defence"] "Team Defence"
+      L.a_ [L.href_ "/defence"] "Team Def"
+      L.a_ [L.href_ "/fixtures/attacking"] "Att Fixtures"
+      L.a_ [L.href_ "/fixtures/defending"] "Def Fixtures"
       L.a_ [L.href_ "/players/totals"] "Player Totals"
     L.main_ body
 

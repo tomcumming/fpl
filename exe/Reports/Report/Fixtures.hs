@@ -13,9 +13,23 @@ import Lucid qualified as L
 import Reports.Api qualified as Api
 import Reports.Markup (baseTemplate, showFloatPlaces)
 import Servant qualified as Sv
+import Servant.HTML.Lucid qualified as Sv
+import Servant.Server.Generic qualified as Sv
 
-fixtures :: Sv.Server Api.FixturesApi
-fixtures = do
+data Focus
+  = Attacking
+  | Defending
+  deriving (Eq, Ord)
+
+fixtures :: Api.FixturesApi Sv.AsServer
+fixtures =
+  Api.FixturesApi
+    { apiFixturesAttacking = fixturesReport Attacking,
+      apiFixturesDefending = fixturesReport Defending
+    }
+
+fixturesReport :: Focus -> Sv.Server (Sv.Get '[Sv.HTML] (L.Html ()))
+fixturesReport focus = do
   LD.Loaded {..} <- liftIO LD.loadFixturesData
 
   let fixtureRows = collectTeamFixtures ldFixtures
@@ -39,11 +53,17 @@ fixtures = do
           scoreRows
   where
     scoreFn :: LD.Result -> M.Map LD.Team Word
-    scoreFn LD.Result {..} =
-      M.fromList
-        [ (resHome, snd resScore),
-          (resAway, fst resScore)
-        ]
+    scoreFn LD.Result {..} = case focus of
+      Attacking ->
+        M.fromList
+          [ (resHome, snd resScore),
+            (resAway, fst resScore)
+          ]
+      Defending ->
+        M.fromList
+          [ (resHome, fst resScore),
+            (resAway, snd resScore)
+          ]
 
     calcScores :: [LD.Result] -> M.Map LD.Team Double
     calcScores =
@@ -76,8 +96,11 @@ fixtures = do
     renderCell minScore maxScore = \case
       Nothing -> L.td_ ""
       Just (team, score) -> do
+        let x = (score - minScore) / (maxScore - minScore)
         let hue =
-              (score - minScore) / (maxScore - minScore)
+              case focus of
+                Attacking -> x
+                Defending -> 1 - x
                 & (* 120)
         let bgCol = "hsl(" <> T.show hue <> " 100% 50% / 0.25)"
         let style = "background-color: " <> bgCol
