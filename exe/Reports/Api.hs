@@ -15,12 +15,18 @@ data Api mode = Api
       mode
         :- "players"
           :> "totals"
-          :> Get '[HTML] (L.Html ())
+          :> Sv.NamedRoutes PlayerTotalsApi
   }
   deriving stock (Generic)
 
 data FixturesApi mode = FixturesApi
   { apiFixturesAttacking :: mode :- "attacking" :> Get '[HTML] (L.Html ()),
     apiFixturesDefending :: mode :- "defending" :> Get '[HTML] (L.Html ())
+  }
+  deriving (Generic)
+
+data PlayerTotalsApi mode = PlayerTotalsApi
+  { apiPlayerTotalsAbsolute :: mode :- Get '[HTML] (L.Html ()),
+    apiPlayerTotalsPer90 :: mode :- "per-90" :> Get '[HTML] (L.Html ())
   }
   deriving (Generic)

@@ -18,6 +18,7 @@ baseTemplate body = L.doctypehtml_ $ L.html_ $ do
       L.a_ [L.href_ "/fixtures/attacking"] "Att Fixtures"
       L.a_ [L.href_ "/fixtures/defending"] "Def Fixtures"
       L.a_ [L.href_ "/players/totals"] "Player Totals"
+      L.a_ [L.href_ "/players/totals/per-90"] "Player / 90"
     L.main_ body
 
 showFloatPlaces :: Int -> Double -> T.Text
