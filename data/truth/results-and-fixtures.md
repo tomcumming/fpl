@@ -110,23 +110,23 @@
 - Wolverhampton Wanderers 1 - 1 Brighton and Hove Albion
 - Brentford 0 - 1 Manchester City
 
-# Fixtures
 ## 2025-10-17
-- Nottingham Forest - Chelsea
-- Brighton and Hove Albion - Newcastle United
-- Burnley - Leeds United
-- Crystal Palace - Bournemouth
-- Manchester City - Everton
-- Sunderland - Wolverhampton Wanderers
-- Fulham - Arsenal
+- Nottingham Forest 0 - 3 Chelsea
+- Brighton and Hove Albion 2 - 1 Newcastle United
+- Burnley 2 - 0 Leeds United
+- Crystal Palace 3 - 3 Bournemouth
+- Manchester City 2 - 0 Everton
+- Sunderland 2 - 0 Wolverhampton Wanderers
+- Fulham 0 - 1 Arsenal
 
 ## 2025-10-18
-- Tottenham Hotspur - Aston Villa
-- Liverpool - Manchester United
+- Tottenham Hotspur 1 - 2 Aston Villa
+- Liverpool 1 - 2 Manchester United
 
 ## 2025-10-19
-- West Ham United - Brentford
+- West Ham United 0 - 2 Brentford
 
+# Fixtures
 ## 2025-10-23
 - Leeds United - West Ham United
 
@@ -238,3 +238,15 @@
 - Newcastle United - Chelsea
 - Tottenham Hotspur - Liverpool
 - Wolverhampton Wanderers - Brentford
+
+## 2025-12-27
+- Arsenal - Brighton and Hove Albion
+- Brentford - Bournemouth
+- Burnley - Everton
+- Chelsea - Aston Villa
+- Crystal Palace - Tottenham Hotspur
+- Liverpool - Wolverhampton Wanderers
+- Manchester United - Newcastle United
+- Nottingham Forest - Manchester City
+- Sunderland - Leeds United
+- West Ham United - Fulham
