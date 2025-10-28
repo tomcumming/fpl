@@ -126,23 +126,23 @@
 ## 2025-10-19
 - West Ham United 0 - 2 Brentford
 
-# Fixtures
 ## 2025-10-23
-- Leeds United - West Ham United
+- Leeds United 2 - 1 West Ham United
 
 ## 2025-10-24
-- Chelsea - Sunderland
-- Newcastle United - Fulham
-- Manchester United - Brighton and Hove Albion
-- Brentford - Liverpool
+- Chelsea 1 - 2 Sunderland
+- Newcastle United 2 - 1 Fulham
+- Manchester United 4 - 2 Brighton and Hove Albion
+- Brentford 3 - 2 Liverpool
 
 ## 2025-10-25
-- Arsenal - Crystal Palace
-- Aston Villa - Manchester City
-- Bournemouth - Nottingham Forest
-- Wolverhampton Wanderers - Burnley
-- Everton - Tottenham Hotspur
+- Arsenal 1 - 0 Crystal Palace
+- Aston Villa 1 - 0 Manchester City
+- Bournemouth 2 - 0 Nottingham Forest
+- Wolverhampton Wanderers 2 - 3 Burnley
+- Everton 0 - 3 Tottenham Hotspur
 
+# Fixtures
 ## 2025-11-01
 - Brighton and Hove Albion - Leeds United
 - Burnley - Arsenal
@@ -250,3 +250,15 @@
 - Nottingham Forest - Manchester City
 - Sunderland - Leeds United
 - West Ham United - Fulham
+
+## 2025-12-30
+- Arsenal - Aston Villa
+- Brentford - Tottenham Hotspur
+- Burnley - Newcastle United
+- Chelsea - Bournemouth
+- Crystal Palace - Fulham
+- Liverpool - Leeds United
+- Manchester United - Wolverhampton Wanderers
+- Nottingham Forest - Everton
+- Sunderland - Manchester City
+- West Ham United - Brighton and Hove Albion
