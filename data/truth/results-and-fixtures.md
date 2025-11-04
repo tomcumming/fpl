@@ -142,19 +142,23 @@
 - Wolverhampton Wanderers 2 - 3 Burnley
 - Everton 0 - 3 Tottenham Hotspur
 
-# Fixtures
 ## 2025-11-01
-- Brighton and Hove Albion - Leeds United
-- Burnley - Arsenal
-- Crystal Palace - Brentford
-- Fulham - Wolverhampton Wanderers
-- Liverpool - Aston Villa
-- Manchester City - Bournemouth
-- Nottingham Forest - Manchester United
-- Sunderland - Everton
-- Tottenham Hotspur - Chelsea
-- West Ham United - Newcastle United
+- Brighton and Hove Albion 3 - 0 Leeds United
+- Burnley 0 - 2 Arsenal
+- Crystal Palace 2 - 0 Brentford
+- Fulham 3 - 0 Wolverhampton Wanderers
+- Nottingham Forest 2 - 2 Manchester United
+- Tottenham Hotspur 0 - 1 Chelsea
+- Liverpool 2 - 0 Aston Villa
 
+## 2025-11-02
+- West Ham United 3 - 1 Newcastle United
+- Manchester City 3 - 1 Bournemouth
+
+## 2025-11-03
+- Sunderland 1 - 1 Everton
+
+# Fixtures
 ## 2025-11-08
 - Aston Villa - Bournemouth
 - Brentford - Newcastle United
@@ -262,3 +266,17 @@
 - Nottingham Forest - Everton
 - Sunderland - Manchester City
 - West Ham United - Brighton and Hove Albion
+
+## 2026-01-03
+- Aston Villa - Nottingham Forest
+- Brighton and Hove Albion - Burnley
+- Wolverhampton Wanderers - West Ham United
+- Bournemouth - Arsenal
+
+## 2026-01-04
+- Leeds United - Manchester United
+- Everton - Brentford
+- Fulham - Liverpool
+- Newcastle United - Crystal Palace
+- Tottenham Hotspur - Sunderland
+- Manchester City - Chelsea
