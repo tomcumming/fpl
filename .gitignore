@@ -1,2 +1,5 @@
 /dist-newstyle
 /reports
+
+/data/truth/player-stats-snapshot.json
+/data/truth/team-stats-snapshot.json
