@@ -172,19 +172,23 @@
 - Nottingham Forest 3 - 1 Leeds United
 - Manchester City 3 - 0 Liverpool
 
-# Fixtures
 ## 2025-11-22
-- Arsenal - Tottenham Hotspur
-- Bournemouth - West Ham United
-- Brighton and Hove Albion - Brentford
-- Burnley - Chelsea
-- Fulham - Sunderland
-- Leeds United - Aston Villa
-- Liverpool - Nottingham Forest
-- Manchester United - Everton
-- Newcastle United - Manchester City
-- Wolverhampton Wanderers - Crystal Palace
+- Burnley 0 - 2 Chelsea
+- Bournemouth 2 - 2 West Ham United
+- Brighton and Hove Albion 2 - 1 Brentford
+- Fulham 1 - 0 Sunderland
+- Liverpool 0 - 3 Nottingham Forest
+- Wolverhampton Wanderers 0 - 2 Crystal Palace
+- Newcastle United 2 - 1 Manchester City
 
+## 2025-11-23
+- Leeds United 1 - 2 Aston Villa
+- Arsenal 4 - 1 Tottenham Hotspur
+
+## 2025-11-24
+- Manchester United 0 - 1 Everton
+
+# Fixtures
 ## 2025-11-29
 - Aston Villa - Wolverhampton Wanderers
 - Brentford - Burnley
@@ -298,3 +302,19 @@
 
 ## 2026-01-08
 - Arsenal - Liverpool
+
+## 2026-01-17
+- Manchester United - Manchester City
+- Chelsea - Brentford
+- Leeds United - Fulham
+- Liverpool - Burnley
+- Sunderland - Crystal Palace
+- Tottenham Hotspur - West Ham United
+- Nottingham Forest - Arsenal
+
+## 2026-01-18
+- Wolverhampton Wanderers - Newcastle United
+- Aston Villa - Everton
+
+## 2026-01-19
+- Brighton and Hove Albion - Bournemouth
