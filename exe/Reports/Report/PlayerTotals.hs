@@ -18,9 +18,6 @@ import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 import Servant.Server.Generic qualified as Sv
 
-minMinutes :: Word
-minMinutes = 90
-
 playerTotals :: Api.PlayerTotalsApi Sv.AsServer
 playerTotals =
   Api.PlayerTotalsApi
@@ -34,6 +31,7 @@ data PlayerTotals = PlayerTotals
     ptsPos :: LD.Position,
     ptsCost :: Double,
     ptsMinutes :: Word,
+    ptsApps :: Word,
     ptsTotal :: Int,
     ptsGoals :: Int,
     ptsCs :: Int,
@@ -45,7 +43,8 @@ data ScoreMaxes a = ScoreMaxes
     smGoals :: a,
     smCs :: a,
     smOther :: a,
-    smMins :: a
+    smMins :: a,
+    smApps :: a
   }
 
 playerTotalsAbsolute :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
@@ -116,11 +115,12 @@ playerTotalsAbsolute = do
           smGoals = pts & fmap ptsGoals & maximum,
           smCs = pts & fmap ptsCs & maximum,
           smOther = pts & fmap ptsOther & maximum,
-          smMins = pts & fmap (ptsMinutes >>> fromIntegral) & maximum
+          smMins = pts & fmap (ptsMinutes >>> fromIntegral) & maximum,
+          smApps = pts & fmap (ptsApps >>> fromIntegral) & maximum
         }
 
     calcPlayerTotal :: LD.PlayerStats -> PlayerTotals
-    calcPlayerTotal LD.PlayerStats {..} =
+    calcPlayerTotal ps@LD.PlayerStats {..} =
       PlayerTotals
         { ptsName = psName,
           ptsTeam = psTeam,
@@ -128,6 +128,7 @@ playerTotalsAbsolute = do
           ptsCost = realToFrac psCost / 10,
           ptsTotal = psPoints,
           ptsMinutes = psMinutes,
+          ptsApps = guessApps ps,
           ..
         }
       where
@@ -149,11 +150,11 @@ playerTotalsPer90 = do
   let dataRows =
         M.elems pdPlayers
           & fmap calcPlayerTotal
-          & filter (ptsMinutes >>> (> minMinutes))
+          & filter (ptsApps >>> (> 0))
   let maxes = calcMaxes dataRows
   let rows =
         dataRows
-          & List.sortOn (\p -> ptsTotal p & perMin p)
+          & List.sortOn (\p -> ptsTotal p & perApp p)
           & reverse
           & zip [1 ..]
           & fmap (uncurry (renderRow maxes))
@@ -165,7 +166,7 @@ playerTotalsPer90 = do
       L.th_ "Pos"
       L.th_ "Cost"
       L.th_ "" -- spacer
-      L.th_ "Mins"
+      L.th_ "Apps"
       L.td_ "" -- spacer
       L.th_ "CS"
       L.th_ "Other"
@@ -182,24 +183,23 @@ playerTotalsPer90 = do
       L.td_ $ L.toHtml $ T.show ptsPos
       L.td_ $ L.toHtml $ T.show ptsCost
       L.td_ "" -- spacer
-      renderMinutes smMins ptsMinutes
+      renderApps smApps ptsApps
       L.td_ "" -- spacer
-      renderScore smCs ptsCs ptsMinutes
-      renderScore smOther ptsOther ptsMinutes
-      renderScore smGoals ptsGoals ptsMinutes
+      renderScore smCs ptsCs ptsApps
+      renderScore smOther ptsOther ptsApps
+      renderScore smGoals ptsGoals ptsApps
       L.td_ "" -- spacer
-      renderScore smTotal ptsTotal ptsMinutes
+      renderScore smTotal ptsTotal ptsApps
 
     renderScore :: Rational -> Int -> Word -> L.Html ()
-    renderScore sm s ms =
+    renderScore sm s apps =
       L.td_
         [L.style_ style]
         $ L.toHtml
         $ showFloatPlaces 1
-        $ realToFrac
-        $ score * 90
+        $ realToFrac score
       where
-        score :: Rational = fromIntegral s % fromIntegral ms
+        score :: Rational = fromIntegral s % fromIntegral apps
         hue =
           realToFrac score / realToFrac sm
             & (* 120)
@@ -207,8 +207,8 @@ playerTotalsPer90 = do
         bgColor = "hsl(" <> hue <> " 100% 50% / 0.25)"
         style = "background-color: " <> bgColor
 
-    renderMinutes :: Rational -> Word -> L.Html ()
-    renderMinutes sm s =
+    renderApps :: Rational -> Word -> L.Html ()
+    renderApps sm s =
       L.td_
         [L.style_ style]
         $ L.toHtml
@@ -226,19 +226,20 @@ playerTotalsPer90 = do
     calcMaxes :: [PlayerTotals] -> ScoreMaxes Rational
     calcMaxes pts =
       ScoreMaxes
-        { smTotal = pts & fmap (\p -> ptsTotal p & perMin p) & maximum,
-          smGoals = pts & fmap (\p -> ptsGoals p & perMin p) & maximum,
-          smCs = pts & fmap (\p -> ptsCs p & perMin p) & maximum,
-          smOther = pts & fmap (\p -> ptsOther p & perMin p) & maximum,
-          smMins = pts & fmap (ptsMinutes >>> fromIntegral) & maximum
+        { smTotal = pts & fmap (\p -> ptsTotal p & perApp p) & maximum,
+          smGoals = pts & fmap (\p -> ptsGoals p & perApp p) & maximum,
+          smCs = pts & fmap (\p -> ptsCs p & perApp p) & maximum,
+          smOther = pts & fmap (\p -> ptsOther p & perApp p) & maximum,
+          smMins = pts & fmap (ptsMinutes >>> fromIntegral) & maximum,
+          smApps = pts & fmap (ptsApps >>> fromIntegral) & maximum
         }
 
-    perMin :: PlayerTotals -> Int -> Rational
-    perMin PlayerTotals {ptsMinutes} s =
-      fromIntegral s % fromIntegral ptsMinutes
+    perApp :: PlayerTotals -> Int -> Rational
+    perApp PlayerTotals {ptsApps} s =
+      fromIntegral s % fromIntegral ptsApps
 
     calcPlayerTotal :: LD.PlayerStats -> PlayerTotals
-    calcPlayerTotal LD.PlayerStats {..} =
+    calcPlayerTotal ps@LD.PlayerStats {..} =
       PlayerTotals
         { ptsName = psName,
           ptsTeam = psTeam,
@@ -246,6 +247,7 @@ playerTotalsPer90 = do
           ptsCost = realToFrac psCost / 10,
           ptsTotal = psPoints,
           ptsMinutes = psMinutes,
+          ptsApps = guessApps ps,
           ..
         }
       where
@@ -255,3 +257,10 @@ playerTotalsPer90 = do
               + psAssists * pointsForAssist
         ptsCs = fromIntegral $ psCleanSheets * pointsForCS psPosition
         ptsOther = psPoints - (ptsGoals + ptsCs)
+
+guessApps :: LD.PlayerStats -> Word
+guessApps LD.PlayerStats {..}
+  | psPtsPerGame > 0 && psPoints > 0 =
+      round $ fromIntegral psPoints / psPtsPerGame
+  | psMinutes > 0 = succ $ psMinutes `div` 90
+  | otherwise = 0

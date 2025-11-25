@@ -17,6 +17,7 @@ import Data.Set qualified as S
 import Data.String (fromString)
 import Data.Text qualified as T
 import FPL.LoadData.Fixtures (Team (Team))
+import Text.Read (readMaybe)
 
 newtype PlayerId = PlayerId Int
   deriving (Eq, Ord, Enum)
@@ -43,7 +44,8 @@ data PlayerStats = PlayerStats
     psDefCon :: Word,
     psGoals :: Word,
     psAssists :: Word,
-    psCleanSheets :: Word
+    psCleanSheets :: Word,
+    psPtsPerGame :: Float
   }
   deriving (Show)
 
@@ -105,6 +107,9 @@ parsePlayerStats teamIds posIds obj = do
     psGoals <- obj Aeson..: "goals_scored"
     psAssists <- obj Aeson..: "assists"
     psCleanSheets <- obj Aeson..: "clean_sheets"
+    psPtsPerGame <-
+      obj Aeson..: "points_per_game"
+        >>= (readMaybe >>> maybe (fail "Invalid pts / game") pure)
     pure $
       if canSelect
         then Just (playerId, PlayerStats {..})
