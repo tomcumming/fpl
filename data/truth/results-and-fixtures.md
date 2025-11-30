@@ -188,19 +188,21 @@
 ## 2025-11-24
 - Manchester United 0 - 1 Everton
 
-# Fixtures
 ## 2025-11-29
-- Aston Villa - Wolverhampton Wanderers
-- Brentford - Burnley
-- Chelsea - Arsenal
-- Crystal Palace - Manchester United
-- Everton - Newcastle United
-- Manchester City - Leeds United
-- Nottingham Forest - Brighton and Hove Albion
-- Sunderland - Bournemouth
-- Tottenham Hotspur - Fulham
-- West Ham United - Liverpool
+- Brentford 3 - 1 Burnley
+- Manchester City 3 - 2 Leeds United
+- Sunderland 3 - 2 Bournemouth
+- Everton 1 - 4 Newcastle United
+- Tottenham Hotspur 1 - 2 Fulham
 
+## 2025-11-30
+- Crystal Palace 1 - 2 Manchester United
+- Aston Villa 1 - 0 Wolverhampton Wanderers
+- Nottingham Forest 0 - 2 Brighton and Hove Albion
+- West Ham United 0 - 2 Liverpool
+- Chelsea 1 - 1 Arsenal
+
+# Fixtures
 ## 2025-12-03
 - Arsenal - Brentford
 - Bournemouth - Everton
@@ -318,3 +320,19 @@
 
 ## 2026-01-19
 - Brighton and Hove Albion - Bournemouth
+
+## 2026-01-24
+- West Ham United - Sunderland
+- Burnley - Tottenham Hotspur
+- Fulham - Brighton and Hove Albion
+- Manchester City - Wolverhampton Wanderers
+- Bournemouth - Liverpool
+
+## 2026-01-25
+- Brentford - Nottingham Forest
+- Crystal Palace - Chelsea
+- Newcastle United - Aston Villa
+- Arsenal - Manchester United
+
+## 2026-01-26
+- Everton - Leeds United
