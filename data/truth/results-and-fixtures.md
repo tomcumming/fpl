@@ -202,31 +202,39 @@
 - West Ham United 0 - 2 Liverpool
 - Chelsea 1 - 1 Arsenal
 
-# Fixtures
+## 2025-12-02
+- Bournemouth 0 - 1 Everton
+- Fulham 4 - 5 Manchester City
+- Newcastle United 2 - 2 Tottenham Hotspur
+
 ## 2025-12-03
-- Arsenal - Brentford
-- Bournemouth - Everton
-- Brighton and Hove Albion - Aston Villa
-- Burnley - Crystal Palace
-- Fulham - Manchester City
-- Leeds United - Chelsea
-- Liverpool - Sunderland
-- Manchester United - West Ham United
-- Newcastle United - Tottenham Hotspur
-- Wolverhampton Wanderers - Nottingham Forest
+- Arsenal 2 - 0 Brentford
+- Brighton and Hove Albion 3 - 4 Aston Villa
+- Burnley 0 - 1 Crystal Palace
+- Wolverhampton Wanderers 0 - 1 Nottingham Forest
+- Leeds United 3 - 1 Chelsea
+- Liverpool 1 - 1 Sunderland
+
+## 2025-12-04
+- Manchester United 1 - 1 West Ham United
 
 ## 2025-12-06
-- Aston Villa - Arsenal
-- Bournemouth - Chelsea
-- Brighton and Hove Albion - West Ham United
-- Everton - Nottingham Forest
-- Fulham - Crystal Palace
-- Leeds United - Liverpool
-- Manchester City - Sunderland
-- Newcastle United - Burnley
-- Tottenham Hotspur - Brentford
-- Wolverhampton Wanderers - Manchester United
+- Aston Villa 2 - 1 Arsenal
+- Bournemouth 0 - 0 Chelsea
+- Everton 3 - 0 Nottingham Forest
+- Manchester City 3 - 0 Sunderland
+- Newcastle United 2 - 1 Burnley
+- Tottenham Hotspur 2 - 0 Brentford
+- Leeds United 3 - 3 Liverpool
 
+## 2025-12-07
+- Brighton and Hove Albion 1 - 1 West Ham United
+- Fulham 1 - 2 Crystal Palace
+
+## 2025-12-08
+- Wolverhampton Wanderers 1 - 4 Manchester United
+
+# Fixtures
 ## 2025-12-13
 - Arsenal - Wolverhampton Wanderers
 - Brentford - Leeds United
@@ -336,3 +344,31 @@
 
 ## 2026-01-26
 - Everton - Leeds United
+
+## 2026-01-31
+- Brighton and Hove Albion - Everton
+- Leeds United - Arsenal
+- Wolverhampton Wanderers - Bournemouth
+- Chelsea - West Ham United
+- Liverpool - Newcastle United
+
+## 2026-02-01
+- Aston Villa - Brentford
+- Manchester United - Fulham
+- Nottingham Forest - Crystal Palace
+- Tottenham Hotspur - Manchester City
+
+## 2026-02-02
+- Sunderland - Burnley
+
+## 2026-02-07
+- Arsenal - Sunderland
+- Bournemouth - Aston Villa
+- Brighton and Hove Albion - Crystal Palace
+- Burnley - West Ham United
+- Fulham - Everton
+- Leeds United - Nottingham Forest
+- Liverpool - Manchester City
+- Manchester United - Tottenham Hotspur
+- Newcastle United - Brentford
+- Wolverhampton Wanderers - Chelsea
