@@ -1,164 +1,112 @@
 module Reports.Report.PlayerTotals (playerTotals) where
 
+import Control.Category ((>>>))
+import Control.Monad.IO.Class (liftIO)
+import Data.Foldable (traverse_)
+import Data.Function ((&))
+import Data.List qualified as L
+import Data.Map qualified as M
+import Data.Ord (Down (Down))
+import Data.Text qualified as T
+import FPL.LoadData.Players (PlayerStats (..), PlayersData, loadPlayerData, pdPlayers)
+import FPL.LoadData.TeamNames (loadTeamNames, teamShortName)
+import FPL.Stats (PlayerPoints (..), playerApps, playerPoints)
 import Lucid qualified as L
 import Reports.Api qualified as Api
+import Reports.Markup (baseTemplate, greenToRed, showFloatPlaces)
 import Servant qualified as Sv
-import Servant.HTML.Lucid qualified as L
 import Servant.Server.Generic qualified as Sv
+
+data Focus
+  = Totals
+  | PerApp
+
+data PlayerDataRow = PlayerDataRow
+  { plrStats :: PlayerStats,
+    plrApps :: Word,
+    plrPoints :: PlayerPoints
+  }
+
+data PlayerScores = PlayerScores
+  { plrTotal :: Float,
+    plrCs :: Float,
+    plrOther :: Float,
+    plrGoals :: Float
+  }
 
 playerTotals :: Api.PlayerTotalsApi Sv.AsServer
 playerTotals =
   Api.PlayerTotalsApi
-    { apiPlayerTotalsAbsolute = playerTotalsAbsolute,
-      apiPlayerTotalsPer90 = playerTotalsPer90
+    { apiPlayerTotalsAbsolute = renderPlayerTotals Totals,
+      apiPlayerTotalsPer90 = renderPlayerTotals PerApp
     }
 
-{-
-
-data PlayerTotals = PlayerTotals
-  { ptsName :: T.Text,
-    ptsTeam :: LD.Team,
-    ptsPos :: LD.Position,
-    ptsCost :: Double,
-    ptsMinutes :: Word,
-    ptsApps :: Word,
-    ptsTotal :: Int,
-    ptsGoals :: Int,
-    ptsCs :: Int,
-    ptsOther :: Int
-  }
-
-data ScoreMaxes a = ScoreMaxes
-  { smTotal :: a,
-    smGoals :: a,
-    smCs :: a,
-    smOther :: a,
-    smMins :: a,
-    smApps :: a
-  }
-
--}
-
-playerTotalsAbsolute :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
-playerTotalsAbsolute = do
-  fail "todo!"
-
-{-
-
-  LD.Loaded {ldNames} <- liftIO LD.loadFixturesData
-  LD.PlayersData {..} <-
-    liftIO $
-      LD.loadPlayerData $
-        S.fromList $
-          M.elems ldNames
-  let dataRows =
-        M.elems pdPlayers
-          & fmap calcPlayerTotal
-          & filter (ptsMinutes >>> (> 0))
-  let maxes = calcMaxes dataRows
-  let rows =
-        List.sortOn ptsTotal dataRows
-          & reverse
-          & zip [1 ..]
-          & fmap (uncurry (renderRow maxes))
-  pure $ baseTemplate $ L.table_ $ do
-    L.thead_ $ L.tr_ $ do
-      L.th_ "Rank"
-      L.th_ "Name"
-      L.th_ "Team"
-      L.th_ "Pos"
-      L.th_ "Cost"
-      L.th_ "" -- spacer
-      L.th_ "CS"
-      L.th_ "Other"
-      L.th_ "Goals"
-      L.th_ ""
-      L.th_ "Total"
-    L.tbody_ $ sequence_ rows
+playerDataRows :: PlayersData -> [PlayerDataRow]
+playerDataRows =
+  pdPlayers
+    >>> M.elems
+    >>> fmap goRow
+    >>> filter (plrApps >>> (> 0))
   where
-    renderRow :: ScoreMaxes Int -> Int -> PlayerTotals -> L.Html ()
-    renderRow ScoreMaxes {..} rank PlayerTotals {..} = L.tr_ $ do
-      L.td_ $ L.toHtml $ T.show rank
-      L.th_ $ L.toHtml ptsName
-      L.td_ $ L.toHtml $ LD.unTeam ptsTeam
-      L.td_ $ L.toHtml $ T.show ptsPos
-      L.td_ $ L.toHtml $ T.show ptsCost
-      L.td_ "" -- spacer
-      renderScore smCs ptsCs
-      renderScore smOther ptsOther
-      renderScore smGoals ptsGoals
-      L.td_ "" -- spacer
-      renderScore smTotal ptsTotal
-
-    renderScore :: Int -> Int -> L.Html ()
-    renderScore sm s =
-      L.td_
-        [L.style_ style]
-        $ L.toHtml
-        $ T.show s
-      where
-        hue =
-          realToFrac s / realToFrac sm
-            & (* 120)
-            & T.show @Double
-        bgColor = "hsl(" <> hue <> " 100% 50% / 0.25)"
-        style = "background-color: " <> bgColor
-
-    calcMaxes :: [PlayerTotals] -> ScoreMaxes Int
-    calcMaxes pts =
-      ScoreMaxes
-        { smTotal = pts & fmap ptsTotal & maximum,
-          smGoals = pts & fmap ptsGoals & maximum,
-          smCs = pts & fmap ptsCs & maximum,
-          smOther = pts & fmap ptsOther & maximum,
-          smMins = pts & fmap (ptsMinutes >>> fromIntegral) & maximum,
-          smApps = pts & fmap (ptsApps >>> fromIntegral) & maximum
+    goRow plrStats =
+      PlayerDataRow
+        { plrStats,
+          plrApps = playerApps plrStats,
+          plrPoints = playerPoints plrStats
         }
 
-    calcPlayerTotal :: LD.PlayerStats -> PlayerTotals
-    calcPlayerTotal ps@LD.PlayerStats {..} =
-      PlayerTotals
-        { ptsName = psName,
-          ptsTeam = psTeam,
-          ptsPos = psPosition,
-          ptsCost = realToFrac psCost / 10,
-          ptsTotal = psPoints,
-          ptsMinutes = psMinutes,
-          ptsApps = guessApps ps,
-          ..
+scorePlayer :: Focus -> PlayerDataRow -> (PlayerDataRow, PlayerScores)
+scorePlayer focus pdr =
+  ( pdr,
+    case focus of
+      Totals -> totalScores
+      PerApp -> perAppScores
+  )
+  where
+    PlayerStats {..} = plrStats pdr
+    PlayerPoints {..} = plrPoints pdr
+
+    totalScores =
+      PlayerScores
+        { plrTotal = realToFrac psPoints,
+          plrCs = realToFrac ppCs,
+          plrOther = realToFrac ppOther,
+          plrGoals = realToFrac ppGoals
         }
-      where
-        ptsGoals =
-          fromIntegral $
-            psGoals * pointsForGoal psPosition
-              + psAssists * pointsForAssist
-        ptsCs = fromIntegral $ psCleanSheets * pointsForCS psPosition
-        ptsOther = psPoints - (ptsGoals + ptsCs)
 
--}
+    perAppScores =
+      PlayerScores
+        { plrTotal = realToFrac psPoints / realToFrac (plrApps pdr),
+          plrCs = realToFrac ppCs / realToFrac (plrApps pdr),
+          plrOther = realToFrac ppOther / realToFrac (plrApps pdr),
+          plrGoals = realToFrac ppGoals / realToFrac (plrApps pdr)
+        }
 
-playerTotalsPer90 :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
-playerTotalsPer90 = do
-  fail "todo!"
+scoreRanges :: [PlayerScores] -> (PlayerScores, PlayerScores)
+scoreRanges ps =
+  ( PlayerScores
+      { plrTotal = minimum $ plrTotal <$> ps,
+        plrCs = minimum $ plrCs <$> ps,
+        plrOther = minimum $ plrOther <$> ps,
+        plrGoals = minimum $ plrGoals <$> ps
+      },
+    PlayerScores
+      { plrTotal = maximum $ plrTotal <$> ps,
+        plrCs = maximum $ plrCs <$> ps,
+        plrOther = maximum $ plrOther <$> ps,
+        plrGoals = maximum $ plrGoals <$> ps
+      }
+  )
 
-{-
-  LD.Loaded {ldNames} <- liftIO LD.loadFixturesData
-  LD.PlayersData {..} <-
-    liftIO $
-      LD.loadPlayerData $
-        S.fromList $
-          M.elems ldNames
-  let dataRows =
-        M.elems pdPlayers
-          & fmap calcPlayerTotal
-          & filter (ptsApps >>> (> 0))
-  let maxes = calcMaxes dataRows
-  let rows =
-        dataRows
-          & List.sortOn (\p -> ptsTotal p & perApp p)
-          & reverse
+renderPlayerTotals :: Focus -> Sv.Handler (L.Html ())
+renderPlayerTotals focus = do
+  teams <- liftIO loadTeamNames
+  playersData <- liftIO $ playerDataRows <$> loadPlayerData teams
+  let dataAndScores = scorePlayer focus <$> playersData
+  let (mins, maxs) = scoreRanges $ snd <$> dataAndScores
+  let sorted =
+        L.sortOn (snd >>> plrTotal >>> Down) dataAndScores
           & zip [1 ..]
-          & fmap (uncurry (renderRow maxes))
   pure $ baseTemplate $ L.table_ $ do
     L.thead_ $ L.tr_ $ do
       L.th_ "Rank"
@@ -167,103 +115,48 @@ playerTotalsPer90 = do
       L.th_ "Pos"
       L.th_ "Cost"
       L.th_ "" -- spacer
+      L.th_ "M/90"
       L.th_ "Apps"
-      L.td_ "" -- spacer
+      L.th_ ""
       L.th_ "CS"
       L.th_ "Other"
       L.th_ "Goals"
       L.th_ ""
       L.th_ "Total"
-    L.tbody_ $ sequence_ rows
+    traverse_ (renderRow mins maxs) sorted
   where
-    renderRow :: ScoreMaxes Rational -> Int -> PlayerTotals -> L.Html ()
-    renderRow ScoreMaxes {..} rank PlayerTotals {..} = L.tr_ $ do
+    renderRow ::
+      PlayerScores ->
+      PlayerScores ->
+      (Int, (PlayerDataRow, PlayerScores)) ->
+      L.Html ()
+    renderRow mins maxs (rank, (PlayerDataRow {..}, ps)) = L.tr_ $ do
       L.td_ $ L.toHtml $ T.show rank
-      L.th_ $ L.toHtml ptsName
-      L.td_ $ L.toHtml $ LD.unTeam ptsTeam
-      L.td_ $ L.toHtml $ T.show ptsPos
-      L.td_ $ L.toHtml $ T.show ptsCost
+      L.th_ $ L.toHtml $ psName plrStats
+      L.td_ $ L.toHtml $ teamShortName $ psTeam plrStats
+      L.td_ $ L.toHtml $ T.show $ psPosition plrStats
+      L.td_ $ L.toHtml $ showFloatPlaces @Float 1 $ realToFrac (psCost plrStats) / 10
       L.td_ "" -- spacer
-      renderApps smApps ptsApps
+      L.td_ $ L.toHtml $ showFloatPlaces @Float 1 $ realToFrac (psMinutes plrStats) / 90
+      L.td_ $ L.toHtml $ T.show plrApps
+      L.td_ ""
+      renderScore plrCs
+      renderScore plrOther
+      renderScore plrGoals
       L.td_ "" -- spacer
-      renderScore smCs ptsCs ptsApps
-      renderScore smOther ptsOther ptsApps
-      renderScore smGoals ptsGoals ptsApps
-      L.td_ "" -- spacer
-      renderScore smTotal ptsTotal ptsApps
-
-    renderScore :: Rational -> Int -> Word -> L.Html ()
-    renderScore sm s apps =
-      L.td_
-        [L.style_ style]
-        $ L.toHtml
-        $ showFloatPlaces 1
-        $ realToFrac score
+      renderScore plrTotal
       where
-        score :: Rational = fromIntegral s % fromIntegral apps
-        hue =
-          realToFrac score / realToFrac sm
-            & (* 120)
-            & T.show @Double
-        bgColor = "hsl(" <> hue <> " 100% 50% / 0.25)"
-        style = "background-color: " <> bgColor
+        renderScore :: (PlayerScores -> Float) -> L.Html ()
+        renderScore selector =
+          let score = selector ps
+              min_ = selector mins
+              max_ = selector maxs
+              r = (score - min_) / (max_ - min_)
 
-    renderApps :: Rational -> Word -> L.Html ()
-    renderApps sm s =
-      L.td_
-        [L.style_ style]
-        $ L.toHtml
-        $ T.show s
-      where
-        score :: Double = fromIntegral s
-        scoreMax = realToFrac sm
-        hue =
-          score / scoreMax
-            & (* 120)
-            & T.show @Double
-        bgColor = "hsl(" <> hue <> " 100% 50% / 0.25)"
-        style = "background-color: " <> bgColor
+              places = case focus of
+                Totals -> 0
+                PerApp -> 1
 
-    calcMaxes :: [PlayerTotals] -> ScoreMaxes Rational
-    calcMaxes pts =
-      ScoreMaxes
-        { smTotal = pts & fmap (\p -> ptsTotal p & perApp p) & maximum,
-          smGoals = pts & fmap (\p -> ptsGoals p & perApp p) & maximum,
-          smCs = pts & fmap (\p -> ptsCs p & perApp p) & maximum,
-          smOther = pts & fmap (\p -> ptsOther p & perApp p) & maximum,
-          smMins = pts & fmap (ptsMinutes >>> fromIntegral) & maximum,
-          smApps = pts & fmap (ptsApps >>> fromIntegral) & maximum
-        }
-
-    perApp :: PlayerTotals -> Int -> Rational
-    perApp PlayerTotals {ptsApps} s =
-      fromIntegral s % fromIntegral ptsApps
-
-    calcPlayerTotal :: LD.PlayerStats -> PlayerTotals
-    calcPlayerTotal ps@LD.PlayerStats {..} =
-      PlayerTotals
-        { ptsName = psName,
-          ptsTeam = psTeam,
-          ptsPos = psPosition,
-          ptsCost = realToFrac psCost / 10,
-          ptsTotal = psPoints,
-          ptsMinutes = psMinutes,
-          ptsApps = guessApps ps,
-          ..
-        }
-      where
-        ptsGoals =
-          fromIntegral $
-            psGoals * pointsForGoal psPosition
-              + psAssists * pointsForAssist
-        ptsCs = fromIntegral $ psCleanSheets * pointsForCS psPosition
-        ptsOther = psPoints - (ptsGoals + ptsCs)
-
-guessApps :: LD.PlayerStats -> Word
-guessApps LD.PlayerStats {..}
-  | psPtsPerGame > 0 && psPoints > 0 =
-      round $ fromIntegral psPoints / psPtsPerGame
-  | psMinutes > 0 = succ $ psMinutes `div` 90
-  | otherwise = 0
-
--}
+              s = showFloatPlaces places score
+              style = "background-color: " <> greenToRed r
+           in L.td_ [L.style_ style] $ L.toHtml s
