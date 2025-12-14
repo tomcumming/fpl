@@ -8,15 +8,15 @@ module FPL.LoadData.Players
 where
 
 import Control.Category ((>>>))
-import Control.Monad (unless, (>=>))
+import Control.Monad ((>=>))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
+import Data.Function ((&))
 import Data.Map qualified as M
 import Data.Maybe (catMaybes)
-import Data.Set qualified as S
 import Data.String (fromString)
 import Data.Text qualified as T
-import FPL.LoadData.Fixtures (Team (Team))
+import FPL.LoadData.TeamNames (Team, teamFromShortName)
 import Text.Read (readMaybe)
 
 newtype PlayerId = PlayerId Int
@@ -50,16 +50,16 @@ data PlayerStats = PlayerStats
   deriving (Show)
 
 playerDataPath :: FilePath
-playerDataPath = "data/truth/player-stats-snapshot.json"
+playerDataPath = "data/snapshot/player-stats.json"
 
-loadPlayerData :: S.Set Team -> IO PlayersData
+loadPlayerData :: M.Map T.Text Team -> IO PlayersData
 loadPlayerData teams =
   Aeson.decodeFileStrict playerDataPath
     >>= maybe (fail "Could not load player data") pure
     >>= (Aeson.parseEither (parsePlayerData teams) >>> pure)
     >>= either (("Invalid player data JSON: " <>) >>> fail) pure
 
-parsePlayerData :: S.Set Team -> Aeson.Object -> Aeson.Parser PlayersData
+parsePlayerData :: M.Map T.Text Team -> Aeson.Object -> Aeson.Parser PlayersData
 parsePlayerData teams root = do
   teamIds <- parseTeamIds teams =<< root Aeson..: "teams"
   positionIds <- parsePositionIds =<< root Aeson..: "element_types"
@@ -115,15 +115,16 @@ parsePlayerStats teamIds posIds obj = do
         then Just (playerId, PlayerStats {..})
         else Nothing
 
-parseTeamIds :: S.Set Team -> [Aeson.Object] -> Aeson.Parser (M.Map Int Team)
+parseTeamIds :: M.Map T.Text Team -> [Aeson.Object] -> Aeson.Parser (M.Map Int Team)
 parseTeamIds teams = traverse go >=> (M.fromList >>> pure)
   where
     go :: Aeson.Object -> Aeson.Parser (Int, Team)
     go obj = do
       teamId <- obj Aeson..: "id"
       teamShortName <- obj Aeson..: "short_name"
-      let team = Team teamShortName
-      unless (team `S.member` teams) $
-        fail $
-          "Unrecognised team: " <> T.unpack teamShortName
+      team <-
+        teamFromShortName teams teamShortName
+          & maybe
+            (fail $ "Unrecognised team: " <> T.unpack teamShortName)
+            pure
       pure (teamId, team)

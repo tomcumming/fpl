@@ -1,21 +1,14 @@
 module Reports.Report.Defence (defence) where
 
-import Control.Category ((>>>))
-import Control.Monad (void)
-import Control.Monad.IO.Class (liftIO)
-import Data.Foldable (traverse_)
-import Data.Function ((&))
-import Data.Map qualified as M
-import Data.Text qualified as T
-import Data.Tuple qualified as Tuple
-import FPL.LoadData.Fixtures qualified as LD
 import Lucid qualified as L
-import Reports.Markup (baseTemplate, showFloatPlaces)
 import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 
 defence :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
 defence = do
+  fail "Todo!"
+
+{-
   LD.Loaded {..} <- liftIO LD.loadFixturesData
   let teams = ldNames & M.assocs & fmap Tuple.swap & M.fromList
   let resultRows =
@@ -67,3 +60,5 @@ defence = do
         >>> T.show
 
     maxGoals = 3
+
+-}

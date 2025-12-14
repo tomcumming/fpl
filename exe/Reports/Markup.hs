@@ -1,4 +1,4 @@
-module Reports.Markup (baseTemplate, showFloatPlaces) where
+module Reports.Markup (baseTemplate, showFloatPlaces, greenToRed) where
 
 import Data.Function ((&))
 import Data.Text qualified as T
@@ -21,5 +21,11 @@ baseTemplate body = L.doctypehtml_ $ L.html_ $ do
       L.a_ [L.href_ "/players/totals/per-90"] "Player / 90"
     L.main_ body
 
-showFloatPlaces :: Int -> Double -> T.Text
+showFloatPlaces :: (RealFloat a) => Int -> a -> T.Text
 showFloatPlaces places n = showFFloat (Just places) n "" & T.pack
+
+-- | Input should be 0-1
+greenToRed :: Float -> T.Text
+greenToRed x =
+  let hue = x * 120
+   in "hsl(" <> T.show hue <> " 100% 50% / 0.25)"

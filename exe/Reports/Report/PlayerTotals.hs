@@ -1,19 +1,7 @@
 module Reports.Report.PlayerTotals (playerTotals) where
 
-import Control.Category ((>>>))
-import Control.Monad.IO.Class (liftIO)
-import Data.Function ((&))
-import Data.List qualified as List
-import Data.Map qualified as M
-import Data.Ratio ((%))
-import Data.Set qualified as S
-import Data.Text qualified as T
-import FPL.LoadData.Fixtures qualified as LD
-import FPL.LoadData.Players qualified as LD
-import FPL.Reports (pointsForAssist, pointsForCS, pointsForGoal)
 import Lucid qualified as L
 import Reports.Api qualified as Api
-import Reports.Markup (baseTemplate, showFloatPlaces)
 import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 import Servant.Server.Generic qualified as Sv
@@ -24,6 +12,8 @@ playerTotals =
     { apiPlayerTotalsAbsolute = playerTotalsAbsolute,
       apiPlayerTotalsPer90 = playerTotalsPer90
     }
+
+{-
 
 data PlayerTotals = PlayerTotals
   { ptsName :: T.Text,
@@ -47,8 +37,14 @@ data ScoreMaxes a = ScoreMaxes
     smApps :: a
   }
 
+-}
+
 playerTotalsAbsolute :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
 playerTotalsAbsolute = do
+  fail "todo!"
+
+{-
+
   LD.Loaded {ldNames} <- liftIO LD.loadFixturesData
   LD.PlayersData {..} <-
     liftIO $
@@ -139,8 +135,13 @@ playerTotalsAbsolute = do
         ptsCs = fromIntegral $ psCleanSheets * pointsForCS psPosition
         ptsOther = psPoints - (ptsGoals + ptsCs)
 
+-}
+
 playerTotalsPer90 :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
 playerTotalsPer90 = do
+  fail "todo!"
+
+{-
   LD.Loaded {ldNames} <- liftIO LD.loadFixturesData
   LD.PlayersData {..} <-
     liftIO $
@@ -264,3 +265,5 @@ guessApps LD.PlayerStats {..}
       round $ fromIntegral psPoints / psPtsPerGame
   | psMinutes > 0 = succ $ psMinutes `div` 90
   | otherwise = 0
+
+-}
