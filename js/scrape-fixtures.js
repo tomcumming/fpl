@@ -1,67 +1,56 @@
-// For parsing each game week from the premier league website
+function scrapeMatchWeek() {
+  const title = document.querySelector('.match-list-header__title').innerText;
+  let matchWeek =parseInt(/^Matchweek (\d+)$/.exec(title)[1]);
+  const dayContainers = document.querySelectorAll('.match-list__day-matches');
+  const fixtures = Array.from(dayContainers)
+    .flatMap(dayContainer => Array.from(dayContainer.querySelectorAll('.match-card'))
+        .map(matchCard => {
+          const [home, away] = Array.from(matchCard.querySelectorAll('.match-card__team-name--full'))
+            .map(e => e.innerText);
 
-function parseDate(str) {
-  if(str == 'Yesterday')
-    return new Date(new Date() - 24 * 60 * 60 * 1_000);
-  if (str == 'Today')
-    return new Date();
+          if (matchCard.querySelector('.match-card__score-label')) {
+            const [_, homeScore, awayScore] = /^(\d+)\s-\s(\d+)$/
+              .exec(matchCard.querySelector('.match-card__score-label').innerText);
+            return [home, parseInt(homeScore), parseInt(awayScore), away];
+          } else {
+            return [home, away];
+          }
+        })
+    );
+  return [
+    { matchWeek },
+    ...fixtures
+  ];
+}
+
+async function scrapeHistorical() {
+  function navPreviousPage() {
+    const PAGING_DELAY = 1000;
+    document.querySelector('button[aria-label="Previous Matchweek"]').click();
+    return new Promise(res => setTimeout(res, PAGING_DELAY));
+  }
   
-  const [_, day, monStr] = str.split(' ');
-  const mon = {
-    'Jan': 1,
-    'Feb': 2,
-    'Mar': 3,
-    'Apr': 4,
-    'May': 5,
-    'Jun': 6,
-    'Jul': 7,
-    'Aug': 8,
-    'Sep': 9,
-    'Oct': 10,
-    'Nov': 11,
-    'Dec': 12,
-  }[monStr];
-  if(day < 1 || day > 31) throw new Error(`Weird day: '${day}'`)
-  if(mon < 1 || mon > 12) throw new Error(`Weird month: '${mon}'`)
-  const year = mon >= 8 ? 2025 : 2026;
-  return new Date(year, mon - 1, day);
+  const thisWeek = scrapeMatchWeek();
+  if(thisWeek[0].matchWeek == 1) {
+    return [thisWeek];
+  } else {
+    await navPreviousPage();
+    return [...(await scrapeHistorical()), thisWeek];
+  }
 }
 
-function scrapeFixtures() {
-  const dayContainers = document.querySelectorAll('.match-list__day-matches');
-  return Array.from(dayContainers)
-    .map(dayContainer => {
-      const date = parseDate(dayContainer.querySelector('.match-list__day-date').innerText);
-      const dateStr = date.toISOString().split('T')[0];
-      const fixtures = Array.from(dayContainer.querySelectorAll('.match-card'))
-        .map(matchCard => {
-          const [home, away] = Array.from(matchCard.querySelectorAll('.match-card__team-name--full'))
-            .map(e => e.innerText);
+async function scrapeUpcoming(count = 10) {
+  function navNextPage() {
+    const PAGING_DELAY = 1000;
+    document.querySelector('button[aria-label="Next Matchweek"]').click();
+    return new Promise(res => setTimeout(res, PAGING_DELAY));
+  }
 
-          return `- ${home} - ${away}`;
-        });
-      return [`## ${dateStr}`, ...fixtures].join('\n')
-    })
-    .join('\n\n')
-}
-
-function scrapeResults() {
-  const dayContainers = document.querySelectorAll('.match-list__day-matches');
-  return Array.from(dayContainers)
-    .map(dayContainer => {
-      const date = parseDate(dayContainer.querySelector('.match-list__day-date').innerText);
-      const dateStr = date.toISOString().split('T')[0];
-      const fixtures = Array.from(dayContainer.querySelectorAll('.match-card'))
-        .map(matchCard => {
-          const [home, away] = Array.from(matchCard.querySelectorAll('.match-card__team-name--full'))
-            .map(e => e.innerText);
-
-          const [_, homeScore, awayScore] = /^(\d+)\s-\s(\d+)$/
-            .exec(matchCard.querySelector('.match-card__score-label').innerText);
-
-          return `- ${home} ${homeScore} - ${awayScore} ${away}`;
-        });
-      return [`## ${dateStr}`, ...fixtures].join('\n')
-    })
-    .join('\n\n')
+  await navNextPage();
+  const thisWeek = scrapeMatchWeek();
+  if (count <= 1 || thisWeek[0].matchWeek >= 38) {
+    return [thisWeek];
+  } else {
+    return [thisWeek, ...(await scrapeUpcoming(count - 1))];
+  }
 }
