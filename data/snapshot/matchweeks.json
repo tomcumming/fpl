@@ -1004,26 +1004,38 @@
     ],
     [
       "Crystal Palace",
+      0,
+      3,
       "Manchester City"
     ],
     [
       "Nottingham Forest",
+      3,
+      0,
       "Tottenham Hotspur"
     ],
     [
       "Sunderland",
+      1,
+      0,
       "Newcastle United"
     ],
     [
       "West Ham United",
+      2,
+      3,
       "Aston Villa"
     ],
     [
       "Brentford",
+      1,
+      1,
       "Leeds United"
     ],
     [
       "Manchester United",
+      4,
+      4,
       "Bournemouth"
     ]
   ],
