@@ -16,7 +16,12 @@ data Api mode = Api
         :- "players"
           :> "totals"
           :> Sv.NamedRoutes PlayerTotalsApi,
-    apiPlayerPrediction :: mode :- "players" :> "prediction" :> Get '[HTML] (L.Html ())
+    apiPlayerPrediction ::
+      mode
+        :- "players"
+          :> "prediction"
+          :> Sv.QueryParam "mw" Int
+          :> Get '[HTML] (L.Html ())
   }
   deriving stock (Generic)
 

@@ -1,5 +1,6 @@
 module FPL.LoadData.MatchWeeks
   ( loadMatchWeeks,
+    unsafeMatchWeek,
     MatchWeek,
     Result (..),
     Fixture (..),
@@ -19,6 +20,9 @@ import FPL.LoadData.TeamNames (Team, loadTeamNames)
 
 newtype MatchWeek = MatchWeek Int
   deriving newtype (Eq, Ord, Show)
+
+unsafeMatchWeek :: Int -> MatchWeek
+unsafeMatchWeek = MatchWeek
 
 data Result = Result
   { resHome :: (Team, Word8),
