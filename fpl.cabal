@@ -47,7 +47,8 @@ executable reports
     other-modules:
         Reports.Api
         Reports.Markup
-        Reports.Server
         Reports.Report.Defence
         Reports.Report.Fixtures
+        Reports.Report.PlayerPrediction
         Reports.Report.PlayerTotals
+        Reports.Server
