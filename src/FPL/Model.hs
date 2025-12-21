@@ -16,7 +16,7 @@ import Data.Map qualified as M
 import Data.Maybe (fromMaybe)
 import Data.Ratio ((%))
 import FPL.LoadData.MatchWeeks (Fixture (..), MatchWeek)
-import FPL.LoadData.Players (PlayerId, PlayerStats (..), PlayersData (..))
+import FPL.LoadData.Players (PlayerId, PlayerStats (..))
 import FPL.LoadData.TeamNames (Team)
 import FPL.Rules (pointsForCS)
 import FPL.Stats (PlayerPoints (..), TeamStats (..), playerApps, playerPoints, tsScored)
@@ -88,9 +88,9 @@ sumPredictedPoints = foldr1 $ \p1 p2 ->
 predictPointsForMatchWeek ::
   M.Map Team TeamStats ->
   [Fixture] ->
-  PlayersData ->
+  M.Map PlayerId PlayerStats ->
   M.Map PlayerId PredictedPoints
-predictPointsForMatchWeek ts fs = pdPlayers >>> M.mapMaybe goPlayer
+predictPointsForMatchWeek ts fs = M.mapMaybe goPlayer
   where
     fixtureMap :: M.Map Team [Team]
     fixtureMap = M.fromListWith (<>) $ do
@@ -136,7 +136,7 @@ predictPointsForMatchWeek ts fs = pdPlayers >>> M.mapMaybe goPlayer
 predictPoints ::
   M.Map Team TeamStats ->
   M.Map MatchWeek [Fixture] ->
-  PlayersData ->
+  M.Map PlayerId PlayerStats ->
   M.Map PlayerId (M.Map MatchWeek PredictedPoints)
 predictPoints ts fs pd =
   goWeek <$> fs

@@ -32,7 +32,7 @@ data Position
   | Def
   | Mid
   | Att
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 data PlayerStats = PlayerStats
   { psName :: T.Text,

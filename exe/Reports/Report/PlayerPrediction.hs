@@ -4,18 +4,19 @@ import Control.Category ((>>>))
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Data.Bifunctor (second)
+import Data.Foldable (sequenceA_)
 import Data.Function ((&))
 import Data.List qualified as List
 import Data.Map qualified as M
+import Data.Maybe (catMaybes)
 import Data.Ord (Down (Down))
 import Data.Text qualified as T
 import FPL.LoadData.MatchWeeks
   ( Fixture (..),
     MatchWeek,
     loadMatchWeeks,
-    unsafeMatchWeek,
   )
-import FPL.LoadData.Players (PlayerId, loadPlayerData, pdPlayers, psName, psPosition, psTeam)
+import FPL.LoadData.Players (PlayerId, Position, loadPlayerData, pdPlayers, psName, psPosition, psTeam)
 import FPL.LoadData.TeamNames (Team, loadTeamNames, teamShortName)
 import FPL.Model (PredictedPoints (..), predictPoints, totalPredicted)
 import FPL.Stats (teamStats)
@@ -24,25 +25,39 @@ import Reports.Markup (baseTemplate, greenToRed, showFloatPlaces)
 import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 
-playerPrediction :: Maybe Int -> Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
-playerPrediction sortByMw = do
+playerPrediction :: Maybe MatchWeek -> Maybe Position -> Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
+playerPrediction sortByMw sortByPos = do
   teams <- liftIO loadTeamNames
   playersData <- liftIO $ loadPlayerData teams
   (results, fixtures) <- liftIO loadMatchWeeks
   let fixturesMap = makeFixturesMap fixtures
   let ts = teamStats results
-  let predicted = predictPoints ts fixtures playersData
+
+  let playerFilter = case sortByPos of
+        Nothing -> const True
+        Just pos -> psPosition >>> (== pos)
+  let filteredPlayers = pdPlayers playersData & M.filter playerFilter
+
+  let predicted = predictPoints ts fixtures filteredPlayers
 
   let rowSort = case sortByMw of
         Nothing -> fmap totalPredicted >>> sum >>> Down
-        Just mw -> (M.! unsafeMatchWeek mw) >>> totalPredicted >>> Down
+        Just mw -> (M.! mw) >>> totalPredicted >>> Down
   let rows = M.assocs predicted & List.sortOn (snd >>> rowSort)
   let cols = M.keys fixtures
 
   let ranges = makeRanges predicted
 
   pure $ baseTemplate $ do
-    L.div_ $ L.a_ [L.href_ "./prediction"] "Sort by Total"
+    L.div_ $ do
+      let links :: [L.Html ()] = (:) (L.a_ [L.href_ $ makeQuery sortByMw Nothing] "All") $
+            flip map [minBound .. maxBound :: Position] $ \pos ->
+              L.a_
+                [L.href_ $ makeQuery sortByMw (Just pos)]
+                $ L.toHtml
+                $ T.show pos
+      sequenceA_ $ List.intersperse " - " links
+    L.div_ $ L.a_ [L.href_ $ makeQuery Nothing sortByPos] "Sort by Total"
     L.table_ $ do
       L.thead_ $ L.tr_ $ do
         L.th_ "Rank"
@@ -51,7 +66,7 @@ playerPrediction sortByMw = do
         L.th_ "Pos"
         L.th_ ""
         forM_ cols $ \mw -> do
-          let href = "?mw=" <> T.show mw
+          let href = makeQuery (Just mw) sortByPos
           L.th_ $ L.a_ [L.href_ href] $ L.toHtml $ T.show mw
       L.tbody_ $ forM_ (zip [1 :: Int ..] rows) $ \(rank, (pid, mws)) -> L.tr_ $ do
         let ps = pdPlayers playersData M.! pid
@@ -82,6 +97,14 @@ playerPrediction sortByMw = do
               L.toHtml $
                 showFloatPlaces 1 $
                   totalPredicted score
+
+makeQuery :: Maybe MatchWeek -> Maybe Position -> T.Text
+makeQuery mw pos =
+  [("mw=" <>) . T.show <$> mw, ("pos=" <>) . T.show <$> pos]
+    & catMaybes
+    & \case
+      [] -> "?"
+      parts -> (<>) "?" $ T.intercalate "&" parts
 
 makeFixturesMap :: M.Map MatchWeek [Fixture] -> M.Map MatchWeek (M.Map Team [Team])
 makeFixturesMap = fmap $ \fs -> M.fromListWith (<>) $ do

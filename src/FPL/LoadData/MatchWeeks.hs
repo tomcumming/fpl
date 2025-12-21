@@ -19,7 +19,7 @@ import Data.Word (Word8)
 import FPL.LoadData.TeamNames (Team, loadTeamNames)
 
 newtype MatchWeek = MatchWeek Int
-  deriving newtype (Eq, Ord, Show)
+  deriving newtype (Eq, Ord, Enum, Show)
 
 unsafeMatchWeek :: Int -> MatchWeek
 unsafeMatchWeek = MatchWeek
