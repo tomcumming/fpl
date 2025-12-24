@@ -27,9 +27,14 @@ library
         FPL.LoadData.MatchWeeks
         FPL.LoadData.Players
         FPL.LoadData.TeamNames
+        FPL.Database.Types
+        FPL.Database.Load
         FPL.Model
         FPL.Rules
         FPL.Stats
+        DoubleMap
+        IndexedMap
+        Memo
     hs-source-dirs:   src
 
 executable reports

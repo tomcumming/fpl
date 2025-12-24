@@ -5,7 +5,7 @@ module FPL.Rules
   )
 where
 
-import FPL.LoadData.Players (Position (..))
+import FPL.Database.Types (Position (..))
 
 pointsForAssist :: Word
 pointsForAssist = 3

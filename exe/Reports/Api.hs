@@ -6,8 +6,7 @@ import Control.Category ((>>>))
 import Control.Monad ((>=>))
 import Data.Bifunctor (first)
 import Data.Text qualified as T
-import FPL.LoadData.MatchWeeks (MatchWeek)
-import FPL.LoadData.Players (Position)
+import FPL.Database.Types (MatchWeek, Position, unsafeMatchWeek)
 import GHC.Generics (Generic)
 import Lucid qualified as L
 import Servant (Get, Raw, (:-), (:>))
@@ -48,7 +47,7 @@ data PlayerTotalsApi mode = PlayerTotalsApi
   deriving (Generic)
 
 instance Sv.FromHttpApiData MatchWeek where
-  parseUrlPiece = Sv.parseUrlPiece >=> (toEnum >>> pure)
+  parseUrlPiece = Sv.parseUrlPiece >=> (unsafeMatchWeek >>> pure)
 
 instance Sv.FromHttpApiData Position where
   parseUrlPiece =

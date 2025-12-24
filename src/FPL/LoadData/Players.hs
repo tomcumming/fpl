@@ -1,38 +1,87 @@
 module FPL.LoadData.Players
-  ( PlayersData (..),
-    loadPlayerData,
-    PlayerId,
-    PlayerStats (..),
-    Position (..),
+  ( playerName,
+    playerPosition,
+    playerTeam,
+    playerMinutes,
+    playerTotalPoints,
+    playerCost,
+    playerGoals,
+    playerAssists,
+    playerCleanSheets,
+    playerPointsPerGame,
   )
 where
 
 import Control.Category ((>>>))
 import Control.Monad ((>=>))
+import Control.Monad.IO.Class (liftIO)
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Key (fromString)
 import Data.Aeson.Types qualified as Aeson
+import Data.Data (Typeable)
 import Data.Function ((&))
 import Data.Map qualified as M
 import Data.Maybe (catMaybes)
-import Data.String (fromString)
+import Data.Set qualified as S
 import Data.Text qualified as T
-import FPL.LoadData.TeamNames (Team, teamFromShortName)
+import Debug.Trace (traceM)
+import FPL.Database.Types (Key (..), Player, Position (..), Team, teamShortName, unsafePlayer)
+import FPL.LoadData.TeamNames (teamNames)
+import Memo qualified
 import Text.Read (readMaybe)
 
-newtype PlayerId = PlayerId Int
-  deriving (Eq, Ord, Enum)
-  deriving newtype (Show)
+loadFirst :: (Typeable val) => Key val -> Memo.Memo Key -> IO val
+loadFirst key memo =
+  Memo.lookup
+    key
+    (insertPlayerData memo >> Memo.lookupUnsafe key memo)
+    memo
 
-newtype PlayersData = PlayersData
-  { pdPlayers :: M.Map PlayerId PlayerStats
-  }
+playerName :: Memo.Memo Key -> IO (M.Map Player T.Text)
+playerName = loadFirst PlayerName
 
-data Position
-  = GK
-  | Def
-  | Mid
-  | Att
-  deriving (Eq, Ord, Enum, Bounded, Show, Read)
+playerPosition :: Memo.Memo Key -> IO (M.Map Player Position)
+playerPosition = loadFirst PlayerPosition
+
+playerTeam :: Memo.Memo Key -> IO (M.Map Player Team)
+playerTeam = loadFirst PlayerTeam
+
+playerMinutes :: Memo.Memo Key -> IO (M.Map Player Word)
+playerMinutes = loadFirst PlayerMinutes
+
+playerTotalPoints :: Memo.Memo Key -> IO (M.Map Player Int)
+playerTotalPoints = loadFirst PlayerTotalPoints
+
+playerCost :: Memo.Memo Key -> IO (M.Map Player Word)
+playerCost = loadFirst PlayerCost
+
+playerGoals :: Memo.Memo Key -> IO (M.Map Player Word)
+playerGoals = loadFirst PlayerGoals
+
+playerAssists :: Memo.Memo Key -> IO (M.Map Player Word)
+playerAssists = loadFirst PlayerAssists
+
+playerCleanSheets :: Memo.Memo Key -> IO (M.Map Player Word)
+playerCleanSheets = loadFirst PlayerCleanSheets
+
+playerPointsPerGame :: Memo.Memo Key -> IO (M.Map Player Float)
+playerPointsPerGame = loadFirst PlayerPointsPerGame
+
+insertPlayerData :: Memo.Memo Key -> IO ()
+insertPlayerData memo = do
+  traceM "Loading PlayerData"
+  tns <- teamNames memo & fmap M.keysSet
+  playersData <- liftIO $ loadPlayerData tns
+  Memo.insert PlayerName (psName <$> playersData) memo
+  Memo.insert PlayerPosition (psPosition <$> playersData) memo
+  Memo.insert PlayerTeam (psTeam <$> playersData) memo
+  Memo.insert PlayerMinutes (psMinutes <$> playersData) memo
+  Memo.insert PlayerTotalPoints (psPoints <$> playersData) memo
+  Memo.insert PlayerCost (psCost <$> playersData) memo
+  Memo.insert PlayerGoals (psGoals <$> playersData) memo
+  Memo.insert PlayerAssists (psAssists <$> playersData) memo
+  Memo.insert PlayerCleanSheets (psCleanSheets <$> playersData) memo
+  Memo.insert PlayerPointsPerGame (psPtsPerGame <$> playersData) memo
 
 data PlayerStats = PlayerStats
   { psName :: T.Text,
@@ -52,22 +101,24 @@ data PlayerStats = PlayerStats
 playerDataPath :: FilePath
 playerDataPath = "data/snapshot/player-stats.json"
 
-loadPlayerData :: M.Map T.Text Team -> IO PlayersData
+loadPlayerData :: S.Set Team -> IO (M.Map Player PlayerStats)
 loadPlayerData teams =
   Aeson.decodeFileStrict playerDataPath
     >>= maybe (fail "Could not load player data") pure
     >>= (Aeson.parseEither (parsePlayerData teams) >>> pure)
     >>= either (("Invalid player data JSON: " <>) >>> fail) pure
 
-parsePlayerData :: M.Map T.Text Team -> Aeson.Object -> Aeson.Parser PlayersData
+parsePlayerData ::
+  S.Set Team ->
+  Aeson.Object ->
+  Aeson.Parser
+    (M.Map Player PlayerStats)
 parsePlayerData teams root = do
   teamIds <- parseTeamIds teams =<< root Aeson..: "teams"
   positionIds <- parsePositionIds =<< root Aeson..: "element_types"
-  pdPlayers <-
-    root Aeson..: "elements"
-      >>= traverse (parsePlayerStats teamIds positionIds)
-      >>= (catMaybes >>> M.fromList >>> pure)
-  pure PlayersData {pdPlayers}
+  root Aeson..: "elements"
+    >>= traverse (parsePlayerStats teamIds positionIds)
+    >>= (catMaybes >>> M.fromList >>> pure)
 
 parsePositionIds :: [Aeson.Object] -> Aeson.Parser (M.Map Int Position)
 parsePositionIds = traverse go >=> (M.fromList >>> pure)
@@ -88,9 +139,9 @@ parsePlayerStats ::
   M.Map Int Team ->
   M.Map Int Position ->
   Aeson.Object ->
-  Aeson.Parser (Maybe (PlayerId, PlayerStats))
+  Aeson.Parser (Maybe (Player, PlayerStats))
 parsePlayerStats teamIds posIds obj = do
-  playerId <- PlayerId <$> obj Aeson..: "id"
+  playerId <- unsafePlayer <$> obj Aeson..: "id"
   (Aeson.<?> Aeson.Key ("playerId=" <> fromString (show playerId))) $ do
     canSelect <- obj Aeson..: "can_select"
     psName <- obj Aeson..: "web_name"
@@ -115,16 +166,21 @@ parsePlayerStats teamIds posIds obj = do
         then Just (playerId, PlayerStats {..})
         else Nothing
 
-parseTeamIds :: M.Map T.Text Team -> [Aeson.Object] -> Aeson.Parser (M.Map Int Team)
-parseTeamIds teams = traverse go >=> (M.fromList >>> pure)
+parseTeamIds :: S.Set Team -> [Aeson.Object] -> Aeson.Parser (M.Map Int Team)
+parseTeamIds tns = traverse go >=> (M.fromList >>> pure)
   where
+    teams =
+      S.toList tns
+        & fmap (\team -> (teamShortName team, team))
+        & M.fromList
+
     go :: Aeson.Object -> Aeson.Parser (Int, Team)
     go obj = do
       teamId <- obj Aeson..: "id"
-      teamShortName <- obj Aeson..: "short_name"
+      shortName <- obj Aeson..: "short_name"
       team <-
-        teamFromShortName teams teamShortName
+        teams M.!? shortName
           & maybe
-            (fail $ "Unrecognised team: " <> T.unpack teamShortName)
+            (fail $ "Unrecognised team: " <> T.unpack shortName <> show teams)
             pure
       pure (teamId, team)

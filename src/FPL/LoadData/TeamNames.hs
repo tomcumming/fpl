@@ -1,26 +1,27 @@
-module FPL.LoadData.TeamNames (Team, teamShortName, loadTeamNames, teamFromShortName) where
+module FPL.LoadData.TeamNames (teamNames) where
 
 import Control.Category ((>>>))
-import Control.Monad (guard)
 import Data.Map qualified as M
 import Data.Text qualified as T
 import Data.Text.IO.Utf8 qualified as T
+import Debug.Trace (traceM)
+import FPL.Database.Types (Key (TeamNames), Team, unsafeTeam)
+import Memo qualified
 
-newtype Team = Team {teamShortName :: T.Text}
-  deriving newtype (Eq, Ord, Show)
+teamNames :: Memo.Memo Key -> IO (M.Map Team T.Text)
+teamNames =
+  Memo.lookup
+    TeamNames
+    loadTeamNames
 
-loadTeamNames :: IO (M.Map T.Text Team)
+loadTeamNames :: IO (M.Map Team T.Text)
 loadTeamNames =
   do
+    traceM "loadTeamNames"
     T.readFile "data/team-names.tsv"
     >>= (T.lines >>> traverse parseLine >>> fmap M.fromList)
   where
     parseLine =
       T.splitOn "\t" >>> \case
-        [code, name] -> pure (name, Team code)
+        [code, name] -> pure (unsafeTeam code, name)
         cells -> fail $ "Could not parse " <> show cells
-
-teamFromShortName :: M.Map T.Text Team -> T.Text -> Maybe Team
-teamFromShortName teams sn = do
-  guard $ elem (Team sn) teams
-  Just $ Team sn

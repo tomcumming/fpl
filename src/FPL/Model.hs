@@ -1,25 +1,31 @@
 module FPL.Model
-  ( Score (..),
-    PredictedPoints (..),
-    predictScores,
-    totalPredicted,
-    predictPointsForMatchWeek,
-    predictPoints,
+  ( meanGoalsFor,
+    meanGoalsConceded,
+    predictedHomeScore,
+    predictedAwayScore,
+    predictedPointsCleanSheet,
+    predictedPointsOther,
+    predictedPointsGoals,
   )
 where
 
 import Control.Category ((>>>))
 import Control.Monad (guard)
+import Data.Data (Typeable)
+import Data.Foldable (fold)
 import Data.Function ((&))
-import Data.List.NonEmpty qualified as NE
-import Data.Map qualified as M
-import Data.Maybe (fromMaybe)
-import Data.Ratio ((%))
-import FPL.LoadData.MatchWeeks (Fixture (..), MatchWeek)
-import FPL.LoadData.Players (PlayerId, PlayerStats (..))
-import FPL.LoadData.TeamNames (Team)
+import Data.Map.Strict qualified as M
+import Data.Maybe (maybeToList)
+import Debug.Trace (traceM)
+import FPL.Database.Types (Fixture, Key (..), Player, Team)
+import FPL.LoadData.MatchWeeks (fixtureAway, fixtureAwayScore, fixtureHome, fixtureHomeScore)
+import FPL.LoadData.Players (playerPosition, playerTeam)
 import FPL.Rules (pointsForCS)
-import FPL.Stats (PlayerPoints (..), TeamStats (..), playerApps, playerPoints, tsScored)
+import FPL.Stats (playerApps, playerGoalPoints, playerOtherPoints)
+import Memo qualified
+
+mean :: (Fractional a, Foldable t) => t a -> a
+mean xs = sum xs / realToFrac (length xs)
 
 factorial :: (Ord t, Num t) => t -> t
 factorial n
@@ -35,113 +41,165 @@ poissonPdf lambda k = lambda ** k' * exp (negate lambda) / factorial k'
 chanceOfCleanSheet :: (Floating a, Ord a) => a -> a
 chanceOfCleanSheet xg = poissonPdf xg 0
 
-data Score a = Score
-  { scoreFor :: a,
-    scoreAgainst :: a
-  }
-  deriving (Show)
+meanGoalsFor :: Memo.Memo Key -> IO (M.Map Team Float)
+meanGoalsFor memo =
+  Memo.lookup
+    MeanGoalsFor
+    (calculateMeanGoals memo >> Memo.lookupUnsafe MeanGoalsFor memo)
+    memo
 
-predictScores ::
-  M.Map Team TeamStats ->
-  M.Map MatchWeek [Fixture] ->
-  M.Map Team (M.Map MatchWeek [(Team, Score Float)])
-predictScores ts =
-  M.assocs
-    >>> concatMap (\(mw, fs) -> (mw,) <$> fs)
-    >>> concatMap (uncurry goFixture)
-    >>> M.fromListWith (M.unionWith (<>))
-  where
-    goFixture :: MatchWeek -> Fixture -> [(Team, M.Map MatchWeek [(Team, Score Float)])]
-    goFixture mw Fixture {fixHome, fixAway} =
-      [ (fixHome, M.singleton mw [(fixAway, Score homePred awayPred)]),
-        (fixAway, M.singleton mw [(fixHome, Score awayPred homePred)])
-      ]
-      where
-        tsHome = ts M.! fixHome
-        tsAway = ts M.! fixAway
+meanGoalsConceded :: Memo.Memo Key -> IO (M.Map Team Float)
+meanGoalsConceded memo =
+  Memo.lookup
+    MeanGoalsConceded
+    (calculateMeanGoals memo >> Memo.lookupUnsafe MeanGoalsConceded memo)
+    memo
 
-        homeGoals :: Float = realToFrac $ tsScored tsHome % tsPlayed tsHome
-        homeConc :: Float = realToFrac $ tsConceded tsHome % tsPlayed tsHome
-        awayGoals :: Float = realToFrac $ tsScored tsAway % tsPlayed tsAway
-        awayConc :: Float = realToFrac $ tsConceded tsAway % tsPlayed tsAway
+predictedHomeScore :: Memo.Memo Key -> IO (M.Map Fixture Float)
+predictedHomeScore memo =
+  Memo.lookup
+    PredictedHomeScore
+    (calculatePredictedScores memo >> Memo.lookupUnsafe PredictedHomeScore memo)
+    memo
 
-        homePred = (homeGoals + awayConc) / 2
-        awayPred = (awayGoals + homeConc) / 2
+predictedAwayScore :: Memo.Memo Key -> IO (M.Map Fixture Float)
+predictedAwayScore memo =
+  Memo.lookup
+    PredictedAwayScore
+    (calculatePredictedScores memo >> Memo.lookupUnsafe PredictedAwayScore memo)
+    memo
 
-data PredictedPoints = PredictedPoints
-  { predCs :: Float,
-    predOther :: Float,
-    predGoals :: Float
-  }
+firstLoadPredicted :: (Typeable val) => Key val -> Memo.Memo Key -> IO val
+firstLoadPredicted key memo =
+  Memo.lookup
+    key
+    (calculatePredictedPoints memo >> Memo.lookupUnsafe key memo)
+    memo
 
-totalPredicted :: PredictedPoints -> Float
-totalPredicted PredictedPoints {..} = predCs + predOther + predGoals
+predictedPointsCleanSheet :: Memo.Memo Key -> IO (M.Map (Player, Fixture) Float)
+predictedPointsCleanSheet = firstLoadPredicted PredictedPointsCleanSheet
 
-sumPredictedPoints :: NE.NonEmpty PredictedPoints -> PredictedPoints
-sumPredictedPoints = foldr1 $ \p1 p2 ->
-  PredictedPoints
-    { predCs = predCs p1 + predCs p2,
-      predOther = predOther p1 + predOther p2,
-      predGoals = predGoals p1 + predGoals p2
-    }
+predictedPointsOther :: Memo.Memo Key -> IO (M.Map (Player, Fixture) Float)
+predictedPointsOther = firstLoadPredicted PredictedPointsOther
 
-predictPointsForMatchWeek ::
-  M.Map Team TeamStats ->
-  [Fixture] ->
-  M.Map PlayerId PlayerStats ->
-  M.Map PlayerId PredictedPoints
-predictPointsForMatchWeek ts fs = M.mapMaybe goPlayer
-  where
-    fixtureMap :: M.Map Team [Team]
-    fixtureMap = M.fromListWith (<>) $ do
-      Fixture {..} <- fs
-      [(fixHome, [fixAway]), (fixAway, [fixHome])]
+predictedPointsGoals :: Memo.Memo Key -> IO (M.Map (Player, Fixture) Float)
+predictedPointsGoals = firstLoadPredicted PredictedPointsGoals
 
-    avgTeamConceded :: Float
-    avgTeamConceded =
-      sum (realToFrac . tsConceded <$> ts)
-        / sum (realToFrac . tsPlayed <$> ts)
+calculateMeanGoals :: Memo.Memo Key -> IO ()
+calculateMeanGoals memo = do
+  traceM "Calculating mean goals"
+  fhs <- fixtureHomeScore memo
+  fas <- fixtureAwayScore memo
+  fh <- fixtureHome memo
+  fa <- fixtureAway memo
+  let goalsFor = fmap (fmap realToFrac >>> mean) $
+        M.fromListWith (<>) $ do
+          (fixture, homeScore) <- M.assocs fhs
+          awayScore <- M.lookup fixture fas & maybeToList
+          home <- M.lookup fixture fh & maybeToList
+          away <- M.lookup fixture fa & maybeToList
+          [(home, [homeScore]), (away, [awayScore])]
+  let goalsConceded = fmap (fmap realToFrac >>> mean) $
+        M.fromListWith (<>) $ do
+          (fixture, homeScore) <- M.assocs fhs
+          awayScore <- M.lookup fixture fas & maybeToList
+          home <- M.lookup fixture fh & maybeToList
+          away <- M.lookup fixture fa & maybeToList
+          [(home, [awayScore]), (away, [homeScore])]
+  Memo.insert MeanGoalsFor goalsFor memo
+  Memo.insert MeanGoalsConceded goalsConceded memo
 
-    goPlayer :: PlayerStats -> Maybe PredictedPoints
-    goPlayer ps@PlayerStats {..} = fmap sumPredictedPoints $ NE.nonEmpty $ do
-      oppTeam <- fromMaybe [] $ fixtureMap M.!? psTeam
-      let ourStats = ts M.! psTeam
-      let oppStats = ts M.! oppTeam
+calculatePredictedScores :: Memo.Memo Key -> IO ()
+calculatePredictedScores memo = do
+  traceM "Calculating predicted scores"
+  fh <- fixtureHome memo
+  fa <- fixtureAway memo
+  fhs <- fixtureHomeScore memo
+  mgf <- meanGoalsFor memo
+  mgc <- meanGoalsConceded memo
+  let homeGoals = M.fromList $ do
+        (fixture, home) <- M.assocs fh
+        guard $ M.notMember fixture fhs
+        away <- M.lookup fixture fa & maybeToList
+        hgf <- M.lookup home mgf & maybeToList
+        agc <- M.lookup away mgc & maybeToList
+        pure (fixture, (hgf + agc) / 2)
+  let awayGoals = M.fromList $ do
+        (fixture, home) <- M.assocs fh
+        guard $ M.notMember fixture fhs
+        away <- M.lookup fixture fa & maybeToList
+        hgc <- M.lookup home mgc & maybeToList
+        agf <- M.lookup away mgf & maybeToList
+        pure (fixture, (agf + hgc) / 2)
+  Memo.insert PredictedHomeScore homeGoals memo
+  Memo.insert PredictedAwayScore awayGoals memo
 
-      let predictedConceded =
-            realToFrac (tsConceded ourStats + tsScored oppStats)
-              / realToFrac (tsPlayed ourStats + tsPlayed oppStats)
+calculatePredictedPoints :: Memo.Memo Key -> IO ()
+calculatePredictedPoints memo = do
+  traceM "Calculating predicted points"
 
-      let apps = realToFrac $ playerApps ps
-      guard $ apps > 0
+  fixtureHome' <- fixtureHome memo
+  fixtureAway' <- fixtureAway memo
+  fixtureHomeScore' <- fixtureHomeScore memo
+  predictedHomeScore' <- predictedHomeScore memo
+  predictedAwayScore' <- predictedAwayScore memo
+  playerPosition' <- playerPosition memo
+  playerApps' <- playerApps memo
+  playerTeam' <- playerTeam memo
+  playerOtherPoints' <- playerOtherPoints memo
+  playerGoalPoints' <- playerGoalPoints memo
+  meanGoalsConceded' <- meanGoalsConceded memo
 
-      let PlayerPoints {ppOther, ppGoals} = playerPoints ps
-      let oppConcededPerGame =
-            realToFrac (tsConceded oppStats)
-              / realToFrac (tsPlayed oppStats)
-      let goalsBonus = oppConcededPerGame / avgTeamConceded
+  let meanGoalsConcedes = mean meanGoalsConceded'
+  traceM $ "meanGoalsConcedes: " <> show meanGoalsConcedes
 
-      pure $
-        PredictedPoints
-          { -- Model clean-sheet points as expected
-            predCs =
-              chanceOfCleanSheet predictedConceded
-                * realToFrac (pointsForCS psPosition),
-            -- Presume other points are mostly constant
-            predOther = realToFrac ppOther / apps,
-            -- Scale player goal points per game by opp defence weakness
-            predGoals = (realToFrac ppGoals / apps) * goalsBonus
-          }
+  let teamFutureFixtures = M.fromListWith (<>) $ do
+        (fixture, home) <-
+          M.withoutKeys fixtureHome' (M.keysSet fixtureHomeScore')
+            & M.assocs
+        away <- M.lookup fixture fixtureAway' & maybeToList
+        [(home, [fixture]), (away, [fixture])]
 
-predictPoints ::
-  M.Map Team TeamStats ->
-  M.Map MatchWeek [Fixture] ->
-  M.Map PlayerId PlayerStats ->
-  M.Map PlayerId (M.Map MatchWeek PredictedPoints)
-predictPoints ts fs pd =
-  goWeek <$> fs
-    & M.assocs
-    & fmap (\(mw, ps) -> M.singleton mw <$> ps)
-    & M.unionsWith (<>)
-  where
-    goWeek fs' = predictPointsForMatchWeek ts fs' pd
+  let predictedOtherPoints = M.fromList $ do
+        (player, otherPoints) <- M.assocs playerOtherPoints'
+        team <- M.lookup player playerTeam' & maybeToList
+        apps <- M.lookup player playerApps' & maybeToList
+        guard $ apps > 0
+        let avgPts :: Float = realToFrac otherPoints / realToFrac apps
+        fixture <- M.lookup team teamFutureFixtures & fold
+        pure ((player, fixture), avgPts)
+
+  let predictedCleanSheetPoints = M.fromList $ do
+        (player, team) <- M.assocs playerTeam'
+        position <- M.lookup player playerPosition' & maybeToList
+        fixture <- M.lookup team teamFutureFixtures & fold
+        let isHome = M.lookup fixture fixtureHome' == Just team
+        conceding <-
+          maybeToList $
+            if isHome
+              then M.lookup fixture predictedAwayScore'
+              else M.lookup fixture predictedHomeScore'
+        pure
+          ( (player, fixture),
+            chanceOfCleanSheet conceding
+              * realToFrac (pointsForCS position)
+          )
+
+  let predictedGoalPoints = M.fromList $ do
+        (player, team) <- M.assocs playerTeam'
+        apps <- M.lookup player playerApps' & maybeToList
+        meanGoalPoints <-
+          M.lookup player playerGoalPoints'
+            & fmap (realToFrac >>> (/ realToFrac apps))
+            & maybeToList
+        fixture <- M.lookup team teamFutureFixtures & fold
+        home <- M.lookup fixture fixtureHome' & maybeToList
+        away <- M.lookup fixture fixtureAway' & maybeToList
+        let opp = if team == home then away else home
+        oppConcedes <- M.lookup opp meanGoalsConceded' & maybeToList
+        let advantage = oppConcedes / meanGoalsConcedes
+        pure ((player, fixture), advantage * meanGoalPoints)
+
+  Memo.insert PredictedPointsCleanSheet predictedCleanSheetPoints memo
+  Memo.insert PredictedPointsOther predictedOtherPoints memo
+  Memo.insert PredictedPointsGoals predictedGoalPoints memo
