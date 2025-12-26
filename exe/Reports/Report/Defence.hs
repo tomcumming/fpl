@@ -1,64 +1,81 @@
 module Reports.Report.Defence (defence) where
 
+import Control.Category ((>>>))
+import Control.Monad (forM_, void)
+import Control.Monad.IO.Class (liftIO)
+import Data.Function ((&))
+import Data.Map qualified as M
+import Data.Maybe (maybeToList)
+import Data.Set qualified as S
+import Data.Text qualified as T
+import DoubleMap qualified as DM
+import FPL.Database.Types (MatchWeek, Team, teamShortName)
+import FPL.LoadData.MatchWeeks (fixtureAway, fixtureAwayScore, fixtureHome, fixtureHomeScore, fixtureIndex, fixtureMatchWeek)
 import Lucid qualified as L
+import Memo qualified
+import Reports.Markup (baseTemplate, greenToRed, showFloatPlaces)
 import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 
 defence :: Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
 defence = do
-  fail "Todo!"
+  db <- liftIO Memo.empty
+  fixtureHomeScore' <- fixtureHomeScore db & liftIO
+  fixtureAwayScore' <- fixtureAwayScore db & liftIO
+  fixtureHome' <- fixtureHome db & liftIO
+  fixtureAway' <- fixtureAway db & liftIO
+  fixtureIndex' <- fixtureIndex db & liftIO
+  fixtureMatchWeek' <- fixtureMatchWeek db & liftIO
 
-{-
-  LD.Loaded {..} <- liftIO LD.loadFixturesData
-  let teams = ldNames & M.assocs & fmap Tuple.swap & M.fromList
-  let resultRows =
-        ldResults
-          & fmap
-            ( \(d, LD.Result {..}) ->
-                let (sh, sa) = resScore
-                 in M.fromList
-                      [(resHome, M.singleton d sa), (resAway, M.singleton d sh)]
-            )
-          & M.unionsWith (<>)
-          & fmap M.elems
-          & M.mapKeysMonotonic (teams M.!)
-  let maxResults = fmap length resultRows & maximum
+  let teamConceded = M.fromListWith (<>) $ do
+        (fixture, homeScore) <- M.assocs fixtureHomeScore'
+        idx <- M.lookup fixture fixtureIndex' & maybeToList
+        awayScore <- M.lookup fixture fixtureAwayScore' & maybeToList
+        home <- M.lookup fixture fixtureHome' & maybeToList
+        away <- M.lookup fixture fixtureAway' & maybeToList
+        mw <- fixtureMatchWeek' & DM.forwards & M.lookup fixture & maybeToList
+        [ (home, M.singleton (mw, idx) awayScore),
+          (away, M.singleton (mw, idx) homeScore)
+          ]
+
+  let mws = foldMap M.keysSet teamConceded
+
   pure $ baseTemplate $ L.table_ $ do
     L.thead_ $ L.tr_ $ do
       L.th_ "Team"
-      L.th_ [L.colspan_ (T.show maxResults)] "Results"
+      forM_ mws (uncurry renderColTitle)
       L.th_ "" -- spacer
       L.th_ "Average"
-    L.tbody_ $ void $ M.traverseWithKey (renderRow maxResults) resultRows
+    L.tbody_ $ void $ M.traverseWithKey (renderRow mws) teamConceded
   where
-    padResults :: Int -> [Word] -> [Maybe Word]
-    padResults l = fmap Just >>> (<> repeat Nothing) >>> take l
+    renderColTitle :: MatchWeek -> Word -> L.Html ()
+    renderColTitle mw =
+      L.th_ . \case
+        1 -> T.show mw & L.toHtml
+        i -> (T.show mw <> " (" <> T.show i <> ")") & L.toHtml
 
-    renderResult :: Int -> Maybe Double -> L.Html ()
+    renderResult :: Int -> Maybe Float -> L.Html ()
     renderResult places = \case
       Nothing -> L.td_ "-"
       Just n -> do
-        let hsl = "hsl(" <> goalsHue (realToFrac n) <> " 100% 50% / 0.25)"
-        let style = "background-color: " <> hsl
+        let style = "background-color: " <> goalsColour n
         L.td_ [L.style_ style] $ L.toHtml $ showFloatPlaces places n
 
-    renderRow :: Int -> T.Text -> [Word] -> L.Html ()
-    renderRow maxResults teamName gs = L.tr_ $ do
-      L.th_ $ L.toHtml teamName
-      padResults maxResults gs
-        & traverse_ (fmap realToFrac >>> renderResult 0)
+    renderRow :: S.Set (MatchWeek, Word) -> Team -> M.Map (MatchWeek, Word) Word -> L.Html ()
+    renderRow allFs teamName rs = L.tr_ $ do
+      L.th_ $ L.toHtml (teamShortName teamName)
+      forM_
+        allFs
+        ((rs M.!?) >>> fmap realToFrac >>> renderResult 0)
       L.td_ "" -- spacer
-      let avg :: Double = fromIntegral (sum gs) / fromIntegral (length gs)
+      let avg = fromIntegral (sum rs) / fromIntegral (M.size rs)
       renderResult 2 $ Just avg
-
-    goalsHue :: Double -> T.Text
-    goalsHue =
-      min maxGoals
-        >>> negate
-        >>> (2 **)
-        >>> (* 120)
-        >>> T.show
 
     maxGoals = 3
 
--}
+    goalsColour :: Float -> T.Text
+    goalsColour =
+      min maxGoals
+        >>> (/ maxGoals)
+        >>> (`subtract` 1)
+        >>> greenToRed

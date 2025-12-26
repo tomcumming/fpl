@@ -17,7 +17,6 @@ server :: Api.Api Sv.AsServer
 server =
   Api.Api
     { apiRoot = pure $ baseTemplate $ do
-        L.header_ $ L.p_ "Hello Header"
         L.main_ $ L.h1_ "FPL Reports",
       apiStatic = Sv.serveDirectoryFileServer "www",
       apiDefence = Defence.defence,
