@@ -1,5 +1,6 @@
 module FPL.Model
-  ( meanGoalsFor,
+  ( mean,
+    meanGoalsFor,
     meanGoalsConceded,
     predictedHomeScore,
     predictedAwayScore,

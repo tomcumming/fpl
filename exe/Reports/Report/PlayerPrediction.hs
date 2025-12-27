@@ -9,6 +9,7 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Bifunctor (second)
 import Data.Foldable (fold, sequenceA_)
 import Data.Function ((&))
+import Data.Functor ((<&>))
 import Data.List qualified as List
 import Data.Map qualified as M
 import Data.Maybe (catMaybes, maybeToList)
@@ -18,7 +19,7 @@ import DoubleMap qualified as DM
 import FPL.Database.Types (Key, MatchWeek, Player, Position, Team, teamShortName)
 import FPL.LoadData.MatchWeeks (fixtureAway, fixtureHome, fixtureHomeScore, fixtureMatchWeek)
 import FPL.LoadData.Players (playerName, playerPosition, playerTeam)
-import FPL.Model (predictedPointsCleanSheet, predictedPointsGoals, predictedPointsOther)
+import FPL.Model (mean, predictedPointsCleanSheet, predictedPointsGoals, predictedPointsOther)
 import FPL.Stats (playerApps)
 import Lucid qualified as L
 import Memo qualified
@@ -39,7 +40,7 @@ playerPrediction sortByMw filterByPos = do
         Nothing -> const True
         Just mw -> \player -> M.lookup player playerPosition' & (== Just mw)
   let sortPlayer = case sortByMw of
-        Nothing -> fmap ppTotal >>> sum
+        Nothing -> fmap ppTotal >>> mean
         Just mw -> M.lookup mw >>> maybe 0 ppTotal
 
   let rows =
@@ -49,6 +50,7 @@ playerPrediction sortByMw filterByPos = do
           & filter (fst >>> filterPlayer)
           & List.sortOn (snd >>> sortPlayer >>> Down)
 
+  let meanRange = fmap snd rows & makeMeanRange
   let ranges = fmap snd rows & makeRanges
   let cols = M.keysSet ranges
 
@@ -69,6 +71,8 @@ playerPrediction sortByMw filterByPos = do
         L.th_ "Team"
         L.th_ "Pos"
         L.th_ ""
+        L.th_ "Avg"
+        L.th_ ""
         forM_ cols $ \mw -> do
           let href = makeQuery (Just mw) filterByPos
           L.th_ $ L.a_ [L.href_ href] $ L.toHtml $ T.show mw
@@ -76,18 +80,19 @@ playerPrediction sortByMw filterByPos = do
         let name = playerName' M.! player
         let team = playerTeam' M.! player
         let position = playerPosition' M.! player
+        let meanPoints = fmap ppTotal mws & mean
         L.td_ $ L.toHtml $ T.show rank
         L.td_ $ L.toHtml name
         L.td_ $ L.toHtml $ teamShortName team
         L.td_ $ L.toHtml $ T.show position
         L.td_ ""
-        forM_ cols $ \mw -> case mws M.!? mw of
-          Nothing -> L.td_ "-"
-          Just score -> do
-            let (minScore, maxScore) = ranges M.! mw
-            let x = (ppTotal score - minScore) / (maxScore - minScore)
-            let style = "background-color: " <> greenToRed x
-            let title =
+        renderCell meanRange "" (Just meanPoints)
+        L.td_ ""
+        forM_ cols $ \mw -> do
+          let mwRange = ranges M.! mw
+          let title = case mws M.!? mw of
+                Nothing -> "No match"
+                Just score ->
                   T.unlines
                     [ T.intercalate ", " $ teamShortName <$> ppOpps score,
                       T.intercalate " / " $
@@ -98,10 +103,18 @@ playerPrediction sortByMw filterByPos = do
                             ppGoals score
                           ]
                     ]
-            L.td_ [L.title_ title, L.style_ style] $
-              L.toHtml $
-                showFloatPlaces 1 $
-                  ppTotal score
+          let score = mws M.!? mw <&> ppTotal
+          renderCell mwRange title score
+  where
+    renderCell :: (Float, Float) -> T.Text -> Maybe Float -> L.Html ()
+    renderCell (minScore, maxScore) title = \case
+      Nothing -> L.td_ "-"
+      Just score -> do
+        let x = (score - minScore) / (maxScore - minScore)
+        let style = "background-color: " <> greenToRed x
+        L.td_ [L.title_ title, L.style_ style] $
+          L.toHtml $
+            showFloatPlaces 1 score
 
 makeQuery :: Maybe MatchWeek -> Maybe Position -> T.Text
 makeQuery mw pos =
@@ -180,3 +193,8 @@ makeRanges predicted =
         & concatMap M.assocs
         & fmap (second (ppTotal >>> pure))
         & M.fromListWith (<>)
+
+makeMeanRange :: [M.Map MatchWeek PlayerPoints] -> (Float, Float)
+makeMeanRange rows = (minimum means, maximum means)
+  where
+    means = fmap (fmap ppTotal) rows & fmap mean
