@@ -1638,5 +1638,50 @@
       "Arsenal",
       "Chelsea"
     ]
+  ],
+  [
+    {
+      "matchWeek": 29
+    },
+    [
+      "Aston Villa",
+      "Chelsea"
+    ],
+    [
+      "Bournemouth",
+      "Brentford"
+    ],
+    [
+      "Brighton and Hove Albion",
+      "Arsenal"
+    ],
+    [
+      "Everton",
+      "Burnley"
+    ],
+    [
+      "Fulham",
+      "West Ham United"
+    ],
+    [
+      "Leeds United",
+      "Sunderland"
+    ],
+    [
+      "Manchester City",
+      "Nottingham Forest"
+    ],
+    [
+      "Newcastle United",
+      "Manchester United"
+    ],
+    [
+      "Tottenham Hotspur",
+      "Crystal Palace"
+    ],
+    [
+      "Wolverhampton Wanderers",
+      "Liverpool"
+    ]
   ]
 ]
