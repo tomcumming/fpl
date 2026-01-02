@@ -1175,42 +1175,62 @@
     },
     [
       "Burnley",
+      1,
+      3,
       "Newcastle United"
     ],
     [
       "Chelsea",
+      2,
+      2,
       "Bournemouth"
     ],
     [
       "Nottingham Forest",
+      0,
+      2,
       "Everton"
     ],
     [
       "West Ham United",
+      2,
+      2,
       "Brighton and Hove Albion"
     ],
     [
       "Arsenal",
+      4,
+      1,
       "Aston Villa"
     ],
     [
       "Manchester United",
+      1,
+      1,
       "Wolverhampton Wanderers"
     ],
     [
       "Crystal Palace",
+      1,
+      1,
       "Fulham"
     ],
     [
       "Liverpool",
+      0,
+      0,
       "Leeds United"
     ],
     [
       "Brentford",
+      0,
+      0,
       "Tottenham Hotspur"
     ],
     [
       "Sunderland",
+      0,
+      0,
       "Manchester City"
     ]
   ],
