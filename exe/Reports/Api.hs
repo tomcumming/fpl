@@ -28,6 +28,8 @@ data Api mode = Api
       mode
         :- "players"
           :> "prediction"
+          :> Sv.QueryParam "from" MatchWeek
+          :> Sv.QueryParam "upto" MatchWeek
           :> Sv.QueryParam "mw" MatchWeek
           :> Sv.QueryParam "pos" Position
           :> Get '[HTML] (L.Html ())

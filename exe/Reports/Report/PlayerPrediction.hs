@@ -4,7 +4,7 @@ module Reports.Report.PlayerPrediction
 where
 
 import Control.Category ((>>>))
-import Control.Monad (forM_)
+import Control.Monad (forM_, guard)
 import Control.Monad.IO.Class (liftIO)
 import Data.Bifunctor (second)
 import Data.Foldable (fold, sequenceA_)
@@ -27,14 +27,19 @@ import Reports.Markup (baseTemplate, greenToRed, showFloatPlaces)
 import Servant qualified as Sv
 import Servant.HTML.Lucid qualified as L
 
-playerPrediction :: Maybe MatchWeek -> Maybe Position -> Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
-playerPrediction sortByMw filterByPos = do
+playerPrediction ::
+  Maybe MatchWeek ->
+  Maybe MatchWeek ->
+  Maybe MatchWeek ->
+  Maybe Position ->
+  Sv.Server (Sv.Get '[L.HTML] (L.Html ()))
+playerPrediction fromMw uptoMw sortByMw filterByPos = do
   db <- liftIO Memo.empty
   playerName' <- playerName db & liftIO
   playerTeam' <- playerTeam db & liftIO
   playerApps' <- playerApps db & liftIO
   playerPosition' <- playerPosition db & liftIO
-  playerData <- makePlayerRows db & liftIO
+  playerData <- makePlayerRows db fromMw uptoMw & liftIO
 
   let filterPlayer = case filterByPos of
         Nothing -> const True
@@ -142,8 +147,12 @@ combinePlayerPoints p1 p2 =
       ppOpps = ppOpps p1 <> ppOpps p2
     }
 
-makePlayerRows :: Memo.Memo Key -> IO (M.Map Player (M.Map MatchWeek PlayerPoints))
-makePlayerRows db = do
+makePlayerRows ::
+  Memo.Memo Key ->
+  Maybe MatchWeek ->
+  Maybe MatchWeek ->
+  IO (M.Map Player (M.Map MatchWeek PlayerPoints))
+makePlayerRows db fromMw uptoMw = do
   playerTeam' <- playerTeam db
   fixtureMatchWeek' <- fixtureMatchWeek db
   fixtureHome' <- fixtureHome db
@@ -167,6 +176,8 @@ makePlayerRows db = do
       (player, team) <- M.assocs playerTeam'
       fixture <- M.lookup team teamFutureFixtures & fold
       mw <- fixtureMatchWeek' & DM.forwards & M.lookup fixture & maybeToList
+      guard $ maybe True (mw >=) fromMw
+      guard $ maybe True (mw <=) uptoMw
       opp <-
         maybeToList $
           if M.lookup fixture fixtureHome' == Just team
