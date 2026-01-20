@@ -1370,42 +1370,62 @@
     },
     [
       "Manchester United",
+      2,
+      0,
       "Manchester City"
     ],
     [
       "Chelsea",
+      2,
+      0,
       "Brentford"
     ],
     [
       "Leeds United",
+      1,
+      0,
       "Fulham"
     ],
     [
       "Liverpool",
+      1,
+      1,
       "Burnley"
     ],
     [
       "Sunderland",
+      2,
+      1,
       "Crystal Palace"
     ],
     [
       "Tottenham Hotspur",
+      1,
+      2,
       "West Ham United"
     ],
     [
       "Nottingham Forest",
+      0,
+      0,
       "Arsenal"
     ],
     [
       "Wolverhampton Wanderers",
+      0,
+      0,
       "Newcastle United"
     ],
     [
       "Aston Villa",
+      0,
+      0,
       "Everton"
     ],
     [
       "Brighton and Hove Albion",
+      1,
+      1,
       "Bournemouth"
     ]
   ],
@@ -1767,6 +1787,51 @@
     [
       "West Ham United",
       "Manchester City"
+    ]
+  ],
+  [
+    {
+      "matchWeek": 31
+    },
+    [
+      "Aston Villa",
+      "West Ham United"
+    ],
+    [
+      "Bournemouth",
+      "Manchester United"
+    ],
+    [
+      "Brighton and Hove Albion",
+      "Liverpool"
+    ],
+    [
+      "Everton",
+      "Chelsea"
+    ],
+    [
+      "Fulham",
+      "Burnley"
+    ],
+    [
+      "Leeds United",
+      "Brentford"
+    ],
+    [
+      "Manchester City",
+      "Crystal Palace"
+    ],
+    [
+      "Newcastle United",
+      "Sunderland"
+    ],
+    [
+      "Tottenham Hotspur",
+      "Nottingham Forest"
+    ],
+    [
+      "Wolverhampton Wanderers",
+      "Arsenal"
     ]
   ],
   [
