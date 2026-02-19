@@ -1630,46 +1630,68 @@
     },
     [
       "Chelsea",
+      2,
+      2,
       "Leeds United"
     ],
     [
       "Everton",
+      1,
+      2,
       "Bournemouth"
     ],
     [
       "Tottenham Hotspur",
+      1,
+      2,
       "Newcastle United"
     ],
     [
       "West Ham United",
+      1,
+      1,
       "Manchester United"
     ],
     [
       "Aston Villa",
+      1,
+      0,
       "Brighton and Hove Albion"
     ],
     [
-      "Crystal Palace",
-      "Burnley"
-    ],
-    [
       "Manchester City",
+      3,
+      0,
       "Fulham"
     ],
     [
       "Nottingham Forest",
+      0,
+      0,
       "Wolverhampton Wanderers"
     ],
     [
+      "Crystal Palace",
+      2,
+      3,
+      "Burnley"
+    ],
+    [
       "Sunderland",
+      0,
+      1,
       "Liverpool"
     ],
     [
       "Brentford",
+      1,
+      1,
       "Arsenal"
     ],
     [
       "Wolverhampton Wanderers",
+      2,
+      2,
       "Arsenal"
     ]
   ],
@@ -1825,10 +1847,6 @@
       "Leeds United"
     ],
     [
-      "Nottingham Forest",
-      "Fulham"
-    ],
-    [
       "Sunderland",
       "Brighton and Hove Albion"
     ],
@@ -1843,6 +1861,10 @@
     [
       "Manchester United",
       "Aston Villa"
+    ],
+    [
+      "Nottingham Forest",
+      "Fulham"
     ],
     [
       "Liverpool",
@@ -2068,6 +2090,51 @@
     [
       "Wolverhampton Wanderers",
       "Sunderland"
+    ]
+  ],
+  [
+    {
+      "matchWeek": 36
+    },
+    [
+      "Brighton and Hove Albion",
+      "Wolverhampton Wanderers"
+    ],
+    [
+      "Burnley",
+      "Aston Villa"
+    ],
+    [
+      "Crystal Palace",
+      "Everton"
+    ],
+    [
+      "Fulham",
+      "Bournemouth"
+    ],
+    [
+      "Liverpool",
+      "Chelsea"
+    ],
+    [
+      "Manchester City",
+      "Brentford"
+    ],
+    [
+      "Nottingham Forest",
+      "Newcastle United"
+    ],
+    [
+      "Sunderland",
+      "Manchester United"
+    ],
+    [
+      "Tottenham Hotspur",
+      "Leeds United"
+    ],
+    [
+      "West Ham United",
+      "Arsenal"
     ]
   ]
 ]
