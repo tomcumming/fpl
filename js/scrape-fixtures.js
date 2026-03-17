@@ -4,16 +4,17 @@ function scrapeMatchWeek() {
   const dayContainers = document.querySelectorAll('.match-list__day-matches');
   const fixtures = Array.from(dayContainers)
     .flatMap(dayContainer => Array.from(dayContainer.querySelectorAll('.match-card'))
-        .map(matchCard => {
+        .flatMap(matchCard => {
           const [home, away] = Array.from(matchCard.querySelectorAll('.match-card__team-name--full'))
             .map(e => e.innerText);
 
           if (matchCard.querySelector('.match-card__score-label')) {
-            const [_, homeScore, awayScore] = /^(\d+)\s-\s(\d+)$/
-              .exec(matchCard.querySelector('.match-card__score-label').innerText);
-            return [home, parseInt(homeScore), parseInt(awayScore), away];
+            const lbl = matchCard.querySelector('.match-card__score-label').innerText;
+            if(lbl === 'P - P') return []; // Handle postponed
+            const [_, homeScore, awayScore] = /^(\d+)\s-\s(\d+)$/.exec(lbl);
+            return [[home, parseInt(homeScore), parseInt(awayScore), away]];
           } else {
-            return [home, away];
+            return [[home, away]];
           }
         })
     );
