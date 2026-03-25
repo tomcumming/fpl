@@ -1961,34 +1961,50 @@
     },
     [
       "Bournemouth",
+      2,
+      2,
       "Manchester United"
     ],
     [
       "Brighton and Hove Albion",
+      2,
+      1,
       "Liverpool"
     ],
     [
       "Fulham",
+      3,
+      1,
       "Burnley"
     ],
     [
       "Everton",
+      3,
+      0,
       "Chelsea"
     ],
     [
       "Leeds United",
+      0,
+      0,
       "Brentford"
     ],
     [
       "Newcastle United",
+      1,
+      2,
       "Sunderland"
     ],
     [
       "Aston Villa",
+      2,
+      0,
       "West Ham United"
     ],
     [
       "Tottenham Hotspur",
+      0,
+      3,
       "Nottingham Forest"
     ]
   ],
@@ -2013,16 +2029,16 @@
       "Brighton and Hove Albion"
     ],
     [
+      "Liverpool",
+      "Fulham"
+    ],
+    [
       "Crystal Palace",
       "Newcastle United"
     ],
     [
       "Nottingham Forest",
       "Aston Villa"
-    ],
-    [
-      "Liverpool",
-      "Fulham"
     ],
     [
       "Sunderland",
@@ -2046,20 +2062,12 @@
       "Fulham"
     ],
     [
-      "Aston Villa",
-      "Sunderland"
-    ],
-    [
       "Leeds United",
       "Wolverhampton Wanderers"
     ],
     [
       "Newcastle United",
       "Bournemouth"
-    ],
-    [
-      "Nottingham Forest",
-      "Burnley"
     ],
     [
       "Tottenham Hotspur",
@@ -2070,8 +2078,16 @@
       "Manchester United"
     ],
     [
+      "Aston Villa",
+      "Sunderland"
+    ],
+    [
       "Everton",
       "Liverpool"
+    ],
+    [
+      "Nottingham Forest",
+      "Burnley"
     ],
     [
       "Manchester City",
