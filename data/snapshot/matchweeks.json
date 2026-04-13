@@ -2014,42 +2014,62 @@
     },
     [
       "West Ham United",
+      4,
+      0,
       "Wolverhampton Wanderers"
     ],
     [
       "Arsenal",
+      1,
+      2,
       "Bournemouth"
     ],
     [
       "Brentford",
+      2,
+      2,
       "Everton"
     ],
     [
       "Burnley",
+      0,
+      2,
       "Brighton and Hove Albion"
     ],
     [
       "Liverpool",
+      2,
+      0,
       "Fulham"
     ],
     [
       "Crystal Palace",
+      2,
+      1,
       "Newcastle United"
     ],
     [
       "Nottingham Forest",
+      1,
+      1,
       "Aston Villa"
     ],
     [
       "Sunderland",
+      1,
+      0,
       "Tottenham Hotspur"
     ],
     [
       "Chelsea",
+      0,
+      3,
       "Manchester City"
     ],
     [
       "Manchester United",
+      1,
+      2,
       "Leeds United"
     ]
   ],
