@@ -2079,54 +2079,80 @@
     },
     [
       "Brentford",
+      0,
+      0,
       "Fulham"
     ],
     [
       "Leeds United",
+      3,
+      0,
       "Wolverhampton Wanderers"
     ],
     [
       "Newcastle United",
+      1,
+      2,
       "Bournemouth"
     ],
     [
       "Tottenham Hotspur",
+      2,
+      2,
       "Brighton and Hove Albion"
     ],
     [
       "Chelsea",
+      0,
+      1,
       "Manchester United"
     ],
     [
       "Aston Villa",
+      4,
+      3,
       "Sunderland"
     ],
     [
       "Everton",
+      1,
+      2,
       "Liverpool"
     ],
     [
       "Nottingham Forest",
+      4,
+      1,
       "Burnley"
     ],
     [
       "Manchester City",
+      2,
+      1,
       "Arsenal"
     ],
     [
       "Crystal Palace",
+      0,
+      0,
       "West Ham United"
     ],
     [
       "Brighton and Hove Albion",
+      3,
+      0,
       "Chelsea"
     ],
     [
       "Bournemouth",
+      2,
+      2,
       "Leeds United"
     ],
     [
       "Burnley",
+      0,
+      1,
       "Manchester City"
     ]
   ],
@@ -2172,14 +2198,6 @@
       "Burnley"
     ],
     [
-      "Aston Villa",
-      "Tottenham Hotspur"
-    ],
-    [
-      "Bournemouth",
-      "Crystal Palace"
-    ],
-    [
       "Brentford",
       "West Ham United"
     ],
@@ -2196,8 +2214,16 @@
       "Fulham"
     ],
     [
+      "Bournemouth",
+      "Crystal Palace"
+    ],
+    [
       "Manchester United",
       "Liverpool"
+    ],
+    [
+      "Aston Villa",
+      "Tottenham Hotspur"
     ],
     [
       "Chelsea",
@@ -2221,14 +2247,6 @@
       "Wolverhampton Wanderers"
     ],
     [
-      "Burnley",
-      "Aston Villa"
-    ],
-    [
-      "Crystal Palace",
-      "Everton"
-    ],
-    [
       "Fulham",
       "Bournemouth"
     ],
@@ -2239,6 +2257,14 @@
     [
       "Manchester City",
       "Brentford"
+    ],
+    [
+      "Burnley",
+      "Aston Villa"
+    ],
+    [
+      "Crystal Palace",
+      "Everton"
     ],
     [
       "Nottingham Forest",
