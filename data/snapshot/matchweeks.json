@@ -2162,30 +2162,44 @@
     },
     [
       "Sunderland",
+      0,
+      5,
       "Nottingham Forest"
     ],
     [
       "Fulham",
+      1,
+      0,
       "Aston Villa"
     ],
     [
       "Liverpool",
+      3,
+      1,
       "Crystal Palace"
     ],
     [
       "West Ham United",
+      2,
+      1,
       "Everton"
     ],
     [
       "Wolverhampton Wanderers",
+      0,
+      1,
       "Tottenham Hotspur"
     ],
     [
       "Arsenal",
+      1,
+      0,
       "Newcastle United"
     ],
     [
       "Manchester United",
+      2,
+      1,
       "Brentford"
     ]
   ],
